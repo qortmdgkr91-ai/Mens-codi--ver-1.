@@ -536,7 +536,7 @@ const App = {
   },
 
   makeBottomFitButtons(){
-    const fits = ["슬림핏","레귤러핏","오버핏"];
+    const fits = ["슬림","레귤러","와이드"];
     this.el.bottomFitButtons.innerHTML = "";
     fits.forEach(name=>{
       const b = document.createElement("button");
@@ -600,8 +600,8 @@ const App = {
     const mehBoosted = this.prioritizeColors(meh, boostColors);
 
     // 약한 페널티: 특정 조합일 때 good 2번째를 meh 1번째와 교체
-    const isOvershirt = this.state.selectedBottomFit === "오버핏" && this.state.selectedTopType === "셔츠";
-    const isSlimHood = this.state.selectedBottomFit === "슬림핏" && this.state.selectedTopType === "후드티";
+    const isOvershirt = this.state.selectedBottomFit === "와이드" && this.state.selectedTopType === "셔츠";
+    const isSlimHood = this.state.selectedBottomFit === "슬림" && this.state.selectedTopType === "후드티";
     if ((isOvershirt || isSlimHood) && goodBoosted.length > 1 && mehBoosted.length > 0){
       const tmp = goodBoosted[1];
       goodBoosted[1] = mehBoosted[0];
