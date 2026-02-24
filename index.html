@@ -1291,6 +1291,34 @@
           console.log("loaded", "top_shade");
           console.log("loaded", "pants_base");
           console.log("loaded", "pants_shade");
+          const sizes = [
+            ["mannequin", this.assets.mannequin],
+            ["top_base", this.assets.topBase],
+            ["top_shade", this.assets.topShade],
+            ["pants_base", this.assets.pantsBase],
+            ["pants_shade", this.assets.pantsShade]
+          ];
+          const w0 = sizes[0][1].naturalWidth;
+          const h0 = sizes[0][1].naturalHeight;
+          let mismatch = false;
+          for (let i = 1; i < sizes.length; i++){
+            const w = sizes[i][1].naturalWidth;
+            const h = sizes[i][1].naturalHeight;
+            if (w !== w0 || h !== h0){
+              mismatch = true;
+              break;
+            }
+          }
+          if (mismatch){
+            const detail = sizes.map(s=> `${s[0]}=${s[1].naturalWidth}x${s[1].naturalHeight}`).join(", ");
+            console.error("image size mismatch", detail);
+            this.assetsReady = false;
+            this.state.loadError = true;
+            if (this.el && this.el.statusCallout){
+              this.el.statusCallout.textContent = "이미지 크기 불일치: " + detail;
+            }
+            return;
+          }
           this.assetsReady = true;
           this.setCanvasSize();
           window.addEventListener("resize", ()=> this.setCanvasSize());
