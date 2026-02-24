@@ -1183,21 +1183,22 @@
         selectedGrade: null,
         selectedBottomFit: "레귤러",
         selectedTopType: "맨투맨",
-        pantsColor: "#6B7280",
+        pantsColor: "#3A3C43",
         topColor: "#9CA3AF",
         reduceMotion: window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches
       },
 
       el: {},
 
-      init(){
+      async init(){
         this.cacheEls();
         this.bindStatic();
         this.setupIcons();
         this.makePantsButtons();
         this.makeBottomFitButtons();
         this.makeTopTypeButtons();
-        this.loadAssets().then(()=> this.renderOutfit());
+        await this.loadAssets();
+        this.renderOutfit();
         this.setNeedsPants(true);
 
         this.el.goodChips.innerHTML = `<div class="muted">하의 색을 먼저 선택하세요.</div>`;
