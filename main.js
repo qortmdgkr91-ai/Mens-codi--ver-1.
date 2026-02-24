@@ -92,7 +92,7 @@ const EDU_TEXT = {
   contrast: "하의가 어두우면 상의는 밝게 가는 게 안전합니다.",
   harmony: "같은 계열이라 튀지 않고 자연스럽습니다.",
   point: "상의에 포인트를 줘서 시선이 분산됩니다.",
-  avoid: "이 조합은 촌해 보일 확률이 높습니다."
+  avoid: "이 조합은 촌스러워 보일 확률이 높습니다."
 };
 
 // =========================================================
@@ -288,10 +288,10 @@ function chipStyle(hex){
   };
 }
 
-function getEduKey(pantsName, shirtName){
+function getEduKey(pantsName, shirtName, grade){
   // 기본값: contrast
-  const pantsHex = COLORS[pantsName]?.hex;
-  const shirtHex = COLORS[shirtName]?.hex;
+  const pantsHex = COLORS[pantsName] ? COLORS[pantsName].hex : null;
+  const shirtHex = COLORS[shirtName] ? COLORS[shirtName].hex : null;
   if (!pantsHex || !shirtHex) return "contrast";
 
   const pantsDark = isDark(pantsHex);
@@ -300,8 +300,8 @@ function getEduKey(pantsName, shirtName){
   // 1) 밝기 대비: 하의 어두움 + 상의 밝음 또는 하의 밝음 + 상의 어두움
   if (pantsDark !== shirtDark) return "contrast";
 
-  // 2) 실패 회피: 둘 다 어두우면(답답해 보일 확률)
-  if (pantsDark && shirtDark) return "avoid";
+  // 2) 실패 회피: 둘 다 어두우면(답답해 보일 확률) + 비추/그닥일 때만
+  if ((grade === "비추" || grade === "그닥") && pantsDark && shirtDark) return "avoid";
 
   // 3) 포인트 배치: 둘 다 밝은데 노란색/핑크 같이 눈에 띄는 상의면 포인트로 처리
   if (!pantsDark && !shirtDark && (shirtName === "노란색" || shirtName === "핑크")) return "point";
@@ -502,7 +502,7 @@ const App = {
 
     const iconSrc = (GRADE[grade] && GRADE[grade].icon) ? GRADE[grade].icon : ICON.circle;
     const phrase = (GRADE[grade] && GRADE[grade].phrase) ? GRADE[grade].phrase : "";
-    const eduKey = getEduKey(this.state.selectedPants, colorName);
+    const eduKey = getEduKey(this.state.selectedPants, colorName, grade);
     const eduLine = EDU_TEXT[eduKey] || EDU_TEXT.contrast;
 
     this.el.statusCallout.innerHTML = `
