@@ -1167,9 +1167,15 @@
     function loadImage(src){
       return new Promise((resolve, reject)=>{
         const img = new Image();
+        let triedNoQuery = false;
         img.onload = ()=> resolve(img);
         img.onerror = ()=>{
           console.error("image load failed", src);
+          if (!triedNoQuery){
+            triedNoQuery = true;
+            img.src = src; // retry without cache buster
+            return;
+          }
           reject({ src: src });
         };
         img.src = src + "?v=" + Date.now();
@@ -1290,6 +1296,7 @@
           window.addEventListener("resize", ()=> this.setCanvasSize());
         }catch(e){
           this.assetsReady = false;
+          this.state.loadError = true;
           if (this.el && this.el.statusCallout){
             const badSrc = (e && e.src) ? e.src : String(e);
             this.el.statusCallout.textContent = "이미지 로드 실패: " + badSrc;
@@ -1303,7 +1310,8 @@
         if (!this.assets) return;
         const dpr = window.devicePixelRatio || 1;
         const rect = canvas.getBoundingClientRect();
-        const cssW = rect.width || 360;
+        const parentW = canvas.parentElement ? canvas.parentElement.getBoundingClientRect().width : 0;
+        const cssW = rect.width || parentW || 360;
         const ratio = this.assets.mannequin.height / this.assets.mannequin.width;
         const cssH = Math.max(1, Math.round(cssW * ratio));
         canvas.style.height = cssH + "px";
@@ -1479,6 +1487,7 @@
       },
 
       renderStatusCallout(grade, colorName){
+        if (this.state.loadError) return;
         const iconSrc = (GRADE[grade] && GRADE[grade].icon) ? GRADE[grade].icon : ICON.circle;
         const phrase = (GRADE[grade] && GRADE[grade].phrase) ? GRADE[grade].phrase : "";
         const bw = badWeight(this.state.selectedPants, colorName);
@@ -1518,6 +1527,7 @@
       },
 
       updateStatusCallout(){
+        if (this.state.loadError) return;
         if (this.state.selectedPants && this.state.selectedShirt && this.state.selectedGrade){
           this.renderStatusCallout(this.state.selectedGrade, this.state.selectedShirt);
           return;
