@@ -1198,7 +1198,6 @@
         this.makeBottomFitButtons();
         this.makeTopTypeButtons();
         await this.loadAssets();
-        this.renderOutfit();
         this.setNeedsPants(true);
 
         this.el.goodChips.innerHTML = `<div class="muted">하의 색을 먼저 선택하세요.</div>`;
@@ -1277,6 +1276,12 @@
           pantsBase: await loadImage(ASSETS.pantsBase),
           pantsShade: await loadImage(ASSETS.pantsShade)
         };
+        console.log("loaded", "mannequin");
+        console.log("loaded", "top_base");
+        console.log("loaded", "top_shade");
+        console.log("loaded", "pants_base");
+        console.log("loaded", "pants_shade");
+        this.assetsReady = true;
         this.setCanvasSize();
         window.addEventListener("resize", ()=> this.setCanvasSize());
       },
@@ -1284,10 +1289,13 @@
       setCanvasSize(){
         const canvas = this.el.outfitCanvas;
         if (!canvas) return;
+        if (!this.assets) return;
         const dpr = window.devicePixelRatio || 1;
         const rect = canvas.getBoundingClientRect();
         const cssW = rect.width || 360;
-        const cssH = rect.height || 320;
+        const ratio = this.assets.mannequin.height / this.assets.mannequin.width;
+        const cssH = Math.max(1, Math.round(cssW * ratio));
+        canvas.style.height = cssH + "px";
         canvas.width = Math.max(1, Math.floor(cssW * dpr));
         canvas.height = Math.max(1, Math.floor(cssH * dpr));
         const ctx = canvas.getContext("2d");
@@ -1297,13 +1305,18 @@
         this.renderOutfit();
       },
 
+      renderIfReady(){
+        if (this.assetsReady) this.renderOutfit();
+      },
+
       renderOutfit(){
         const canvas = this.el.outfitCanvas;
-        if (!canvas || !this.assets) return;
+        if (!canvas || !this.assetsReady) return;
         const ctx = canvas.getContext("2d");
         const w = this.canvasCssW || (canvas.width / (window.devicePixelRatio || 1));
         const h = this.canvasCssH || (canvas.height / (window.devicePixelRatio || 1));
 
+        console.log("render", this.state.pantsColor, this.state.topColor);
         ctx.clearRect(0, 0, w, h);
         ctx.globalCompositeOperation = "source-over";
         ctx.drawImage(this.assets.mannequin, 0, 0, w, h);
@@ -1558,7 +1571,7 @@
         this.state.selectedPants = name;
         this.el.statePill.textContent = "하의 선택: " + name;
         this.state.pantsColor = COLORS[name].hex;
-        this.renderOutfit();
+        this.renderIfReady();
         const btns = this.el.pantsButtons.querySelectorAll("button");
         btns.forEach(btn => {
           if (btn.getAttribute("data-color") === name) btn.classList.add("selected");
@@ -1578,7 +1591,7 @@
         this.state.selectedBottomFit = name;
         this.el.fitPill.textContent = "하의 핏: " + name;
         this.updateSelectedButtons(this.el.bottomFitButtons, name);
-        this.renderOutfit();
+        this.renderIfReady();
         this.showToast(`${name} 선택 ✅`);
         this.refreshRecommendations();
         this.updateStatusCallout();
@@ -1588,7 +1601,7 @@
         this.state.selectedTopType = name;
         this.el.topTypePill.textContent = "상의 종류: " + name;
         this.updateSelectedButtons(this.el.topTypeButtons, name);
-        this.renderOutfit();
+        this.renderIfReady();
         this.showToast(`${name} 선택 ✅`);
         this.refreshRecommendations();
         this.updateStatusCallout();
@@ -1602,7 +1615,7 @@
         this.state.selectedShirt = colorName;
         this.state.selectedGrade = grade;
         this.state.topColor = COLORS[colorName].hex;
-        this.renderOutfit();
+        this.renderIfReady();
         this.el.shirtPill.textContent = "상의 선택: " + colorName;
         this.renderStatusCallout(grade, colorName);
         this.showToast(STRINGS.toast.shirtApplied(colorName));
