@@ -466,7 +466,7 @@
       to{ transform: translateX(-50%) translateY(0); opacity:1; }
     }
 
-    #outfitCanvas{ width: 100%; height: auto; display:block; }
+    #outfitCanvas{ width: 100%; height: 320px; display:block; }
 
     @media (prefers-reduced-motion: reduce){
       *, *::before, *::after{
@@ -1286,10 +1286,14 @@
         if (!canvas) return;
         const dpr = window.devicePixelRatio || 1;
         const rect = canvas.getBoundingClientRect();
-        canvas.width = Math.max(1, Math.floor(rect.width * dpr));
-        canvas.height = Math.max(1, Math.floor(rect.height * dpr));
+        const cssW = rect.width || 360;
+        const cssH = rect.height || 320;
+        canvas.width = Math.max(1, Math.floor(cssW * dpr));
+        canvas.height = Math.max(1, Math.floor(cssH * dpr));
         const ctx = canvas.getContext("2d");
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        this.canvasCssW = cssW;
+        this.canvasCssH = cssH;
         this.renderOutfit();
       },
 
@@ -1297,8 +1301,8 @@
         const canvas = this.el.outfitCanvas;
         if (!canvas || !this.assets) return;
         const ctx = canvas.getContext("2d");
-        const w = canvas.width / (window.devicePixelRatio || 1);
-        const h = canvas.height / (window.devicePixelRatio || 1);
+        const w = this.canvasCssW || (canvas.width / (window.devicePixelRatio || 1));
+        const h = this.canvasCssH || (canvas.height / (window.devicePixelRatio || 1));
 
         ctx.clearRect(0, 0, w, h);
         ctx.globalCompositeOperation = "source-over";
