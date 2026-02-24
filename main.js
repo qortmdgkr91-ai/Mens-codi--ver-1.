@@ -721,12 +721,12 @@ const App = {
     if (!this.state.selectedPants) return;
     const r = RULES[this.state.selectedPants];
     const adjusted = this.adjustListsForSelections(r);
-    this.renderChips(this.el.goodChips, adjusted.good);
+    this.renderChips(this.el.goodChips, adjusted.good, 4);
     let badList = (adjusted.bad && adjusted.bad.length) ? adjusted.bad.slice() : [];
     if (!badList.length && adjusted.meh && adjusted.meh.length) badList = adjusted.meh.slice(0,2);
     badList = this.sortByWeight(badList, this.state.selectedPants, badWeight, null);
-    this.renderChips(this.el.badChips, badList);
-    this.renderChips(this.el.mehChips, adjusted.meh || []);
+    this.renderChips(this.el.badChips, badList, 2);
+    this.renderChips(this.el.mehChips, adjusted.meh || [], 2);
   },
 
   renderStatusCallout(grade, colorName){
@@ -782,7 +782,7 @@ const App = {
     }
   },
 
-  renderChips(el, items){
+  renderChips(el, items, limit){
     el.innerHTML = "";
     if (!this.state.selectedPants){
       el.innerHTML = `<div class="muted">하의 색을 먼저 선택하세요.</div>`;
@@ -793,7 +793,8 @@ const App = {
       return;
     }
 
-    items.slice(0,2).forEach(it=>{
+    const max = typeof limit === "number" ? limit : 2;
+    items.slice(0, max).forEach(it=>{
       const hex = COLORS[it.color].hex;
       const s = chipStyle(hex);
 
