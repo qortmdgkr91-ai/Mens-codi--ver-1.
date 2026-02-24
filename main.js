@@ -102,6 +102,27 @@ const STYLE_LINE = {
   "니트":  "니트는 ‘고급스러움’이 포인트입니다. 뉴트럴 톤이 안전합니다."
 };
 
+const SHIRT_GROUP = {
+  core: ["흰색","아이보리","크림","그레이","차콜","네이비","베이지"],
+  earth: ["브라운","카키"],
+  accent: ["파란색","노란색","핑크","녹색"]
+};
+
+function shirtBaseScore(shirtName, pantsName){
+  if (SHIRT_GROUP.core.indexOf(shirtName) !== -1) return 2;
+  if (SHIRT_GROUP.earth.indexOf(shirtName) !== -1) return 1;
+
+  // accent는 기본적으로 불리
+  if (SHIRT_GROUP.accent.indexOf(shirtName) !== -1){
+    // 단, 하의가 무채/중립이면 패널티 완화
+    if (pantsName === "검정" || pantsName === "차콜" || pantsName === "네이비" || pantsName === "베이지"){
+      return 0;
+    }
+    return -1;
+  }
+  return 0;
+}
+
 const EDU_CASES = [
   {"pants":"검정","shirt":"흰색","eduKey":"contrast","weight":3},
   {"pants":"검정","shirt":"아이보리","eduKey":"contrast","weight":3},
@@ -656,7 +677,7 @@ const App = {
     });
   },
 
-  sortByWeight(list, pantsName, weightFn, priorityColors){
+  sortByWeight(list, pantsName, weightFn, priorityColors, baseScoreFn){
     const items = list ? list.slice() : [];
     if (!items.length) return [];
     const pri = priorityColors || [];
@@ -665,7 +686,11 @@ const App = {
       .sort((a, b)=>{
         const wa = weightFn(pantsName, a.item.color);
         const wb = weightFn(pantsName, b.item.color);
-        if (wb !== wa) return wb - wa;
+        const sa = baseScoreFn ? baseScoreFn(a.item.color, pantsName) : 0;
+        const sb = baseScoreFn ? baseScoreFn(b.item.color, pantsName) : 0;
+        const scoreA = (wa * 10) + sa;
+        const scoreB = (wb * 10) + sb;
+        if (scoreB !== scoreA) return scoreB - scoreA;
         if (pri.length){
           const pa = pri.indexOf(a.item.color);
           const pb = pri.indexOf(b.item.color);
@@ -685,8 +710,8 @@ const App = {
     else if (this.state.selectedTopType === "후드티" || this.state.selectedTopType === "맨투맨") boostColors = ["차콜","베이지"];
     else if (this.state.selectedTopType === "니트") boostColors = ["흰색","베이지"];
 
-    const good = this.sortByWeight(rule.good || [], pantsName, caseWeight, boostColors);
-    const meh = this.sortByWeight(rule.meh || [], pantsName, caseWeight, boostColors);
+    const good = this.sortByWeight(rule.good || [], pantsName, caseWeight, boostColors, shirtBaseScore);
+    const meh = this.sortByWeight(rule.meh || [], pantsName, caseWeight, boostColors, shirtBaseScore);
     const bad = this.sortByWeight(rule.bad || [], pantsName, badWeight, null);
 
     return { good, bad, meh };
