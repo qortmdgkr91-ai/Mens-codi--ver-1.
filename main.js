@@ -95,6 +95,84 @@ const EDU_TEXT = {
   avoid: "이 조합은 촌스러워 보일 확률이 높습니다."
 };
 
+const STYLE_LINE = {
+  "셔츠":  "셔츠는 ‘깔끔함’이 이깁니다. 톤을 정돈하세요.",
+  "맨투맨":"맨투맨은 ‘무난함’이 정답입니다. 과한 색은 피하세요.",
+  "후드티":"후드티는 ‘캐주얼’이 핵심입니다. 대비를 너무 세게 주지 마세요.",
+  "니트":  "니트는 ‘고급스러움’이 포인트입니다. 뉴트럴 톤이 안전합니다."
+};
+
+const EDU_CASES = [
+  // ===== 검정(Black) 하의 =====
+  { pants:"검정", shirt:"흰색",   eduKey:"contrast", weight:3 },
+  { pants:"검정", shirt:"아이보리", eduKey:"contrast", weight:3 },
+  { pants:"검정", shirt:"크림",   eduKey:"contrast", weight:2 },
+  { pants:"검정", shirt:"베이지", eduKey:"harmony",  weight:2 },
+  { pants:"검정", shirt:"차콜",   eduKey:"avoid",    weight:2 },
+  { pants:"검정", shirt:"네이비", eduKey:"avoid",    weight:2 },
+  { pants:"검정", shirt:"파란색", eduKey:"point",    weight:1 },
+  { pants:"검정", shirt:"노란색", eduKey:"point",    weight:2 },
+  { pants:"검정", shirt:"핑크",   eduKey:"point",    weight:1 },
+  { pants:"검정", shirt:"녹색",   eduKey:"point",    weight:1 },
+
+  // ===== 차콜(Charcoal) 하의 =====
+  { pants:"차콜", shirt:"흰색",   eduKey:"contrast", weight:3 },
+  { pants:"차콜", shirt:"아이보리", eduKey:"contrast", weight:3 },
+  { pants:"차콜", shirt:"크림",   eduKey:"contrast", weight:2 },
+  { pants:"차콜", shirt:"네이비", eduKey:"harmony",  weight:2 },
+  { pants:"차콜", shirt:"베이지", eduKey:"harmony",  weight:2 },
+  { pants:"차콜", shirt:"검정",   eduKey:"avoid",    weight:2 },
+  { pants:"차콜", shirt:"노란색", eduKey:"point",    weight:1 },
+  { pants:"차콜", shirt:"핑크",   eduKey:"point",    weight:1 },
+
+  // ===== 네이비(Navy) 하의 =====
+  { pants:"네이비", shirt:"흰색",   eduKey:"contrast", weight:3 },
+  { pants:"네이비", shirt:"아이보리", eduKey:"contrast", weight:3 },
+  { pants:"네이비", shirt:"크림",   eduKey:"contrast", weight:2 },
+  { pants:"네이비", shirt:"베이지", eduKey:"harmony",  weight:2 },
+  { pants:"네이비", shirt:"파란색", eduKey:"harmony",  weight:1 },
+  { pants:"네이비", shirt:"차콜",   eduKey:"harmony",  weight:2 },
+  { pants:"네이비", shirt:"검정",   eduKey:"avoid",    weight:2 },
+  { pants:"네이비", shirt:"노란색", eduKey:"point",    weight:1 },
+
+  // ===== 진청(Dark Denim) 하의 =====
+  { pants:"진청", shirt:"흰색",   eduKey:"contrast", weight:3 },
+  { pants:"진청", shirt:"아이보리", eduKey:"contrast", weight:3 },
+  { pants:"진청", shirt:"크림",   eduKey:"contrast", weight:2 },
+  { pants:"진청", shirt:"파란색", eduKey:"harmony",  weight:2 },
+  { pants:"진청", shirt:"베이지", eduKey:"harmony",  weight:2 },
+  { pants:"진청", shirt:"차콜",   eduKey:"harmony",  weight:2 },
+  { pants:"진청", shirt:"네이비", eduKey:"avoid",    weight:2 },
+  { pants:"진청", shirt:"노란색", eduKey:"point",    weight:1 },
+
+  // ===== 연청(Light Denim) 하의 =====
+  { pants:"연청", shirt:"흰색",   eduKey:"harmony",  weight:3 },
+  { pants:"연청", shirt:"아이보리", eduKey:"harmony",  weight:2 },
+  { pants:"연청", shirt:"크림",   eduKey:"harmony",  weight:2 },
+  { pants:"연청", shirt:"네이비", eduKey:"contrast", weight:2 },
+  { pants:"연청", shirt:"차콜",   eduKey:"contrast", weight:2 },
+  { pants:"연청", shirt:"베이지", eduKey:"harmony",  weight:2 },
+  { pants:"연청", shirt:"노란색", eduKey:"point",    weight:1 },
+
+  // ===== 베이지/아이보리/크림/카키/브라운 하의 (멘즈웨어 뉴트럴) =====
+  { pants:"베이지", shirt:"네이비", eduKey:"contrast", weight:3 },
+  { pants:"베이지", shirt:"흰색",   eduKey:"harmony",  weight:3 },
+  { pants:"베이지", shirt:"차콜",   eduKey:"harmony",  weight:2 },
+
+  { pants:"아이보리", shirt:"네이비", eduKey:"contrast", weight:3 },
+  { pants:"크림",   shirt:"네이비", eduKey:"contrast", weight:3 },
+
+  { pants:"카키",   shirt:"흰색",   eduKey:"contrast", weight:3 },
+  { pants:"카키",   shirt:"네이비", eduKey:"harmony",  weight:3 },
+
+  { pants:"브라운", shirt:"흰색",   eduKey:"contrast", weight:2 },
+  { pants:"브라운", shirt:"아이보리", eduKey:"harmony",  weight:3 },
+
+  // ===== 흑청 하의 =====
+  { pants:"흑청", shirt:"흰색",   eduKey:"contrast", weight:3 },
+  { pants:"흑청", shirt:"아이보리", eduKey:"contrast", weight:3 }
+];
+
 // =========================================================
 // 룰 데이터
 // =========================================================
@@ -310,6 +388,27 @@ function getEduKey(pantsName, shirtName, grade){
   return "harmony";
 }
 
+function getStyleLine(){
+  if (typeof App === "undefined" || !App.state || !App.state.selectedTopType) return "";
+  return STYLE_LINE[App.state.selectedTopType] || "";
+}
+
+function findEduKeyFromCases(pantsName, shirtName){
+  for (var i=0;i<EDU_CASES.length;i++){
+    var c = EDU_CASES[i];
+    if (c.pants === pantsName && c.shirt === shirtName) return c.eduKey;
+  }
+  return null;
+}
+
+function caseWeight(pantsName, shirtName){
+  for (var i=0;i<EDU_CASES.length;i++){
+    var c = EDU_CASES[i];
+    if (c.pants === pantsName && c.shirt === shirtName) return c.weight || 1;
+  }
+  return 0;
+}
+
 // =========================================================
 // App
 // =========================================================
@@ -317,6 +416,7 @@ const App = {
   state: {
     selectedPants: null,
     selectedShirt: null,
+    selectedGrade: null,
     selectedBottomFit: null,
     selectedTopType: null,
     reduceMotion: window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches
@@ -449,7 +549,7 @@ const App = {
   },
 
   makeTopTypeButtons(){
-    const types = ["셔츠","맨투맨","반팔티","후드티"];
+    const types = ["셔츠","맨투맨","후드티","니트"];
     this.el.topTypeButtons.innerHTML = "";
     types.forEach(name=>{
       const b = document.createElement("button");
@@ -486,10 +586,15 @@ const App = {
     const bad = rule.bad ? rule.bad.slice() : [];
     const meh = rule.meh ? rule.meh.slice() : [];
 
+    const pantsName = this.state.selectedPants;
+    good.sort((a,b)=> caseWeight(pantsName, b.color) - caseWeight(pantsName, a.color));
+    bad.sort((a,b)=> caseWeight(pantsName, b.color) - caseWeight(pantsName, a.color));
+    meh.sort((a,b)=> caseWeight(pantsName, b.color) - caseWeight(pantsName, a.color));
+
     let boostColors = null;
     if (this.state.selectedTopType === "셔츠") boostColors = ["흰색","파란색"];
     else if (this.state.selectedTopType === "후드티" || this.state.selectedTopType === "맨투맨") boostColors = ["차콜","베이지"];
-    else if (this.state.selectedTopType === "반팔티") boostColors = ["흰색","베이지"];
+    else if (this.state.selectedTopType === "니트") boostColors = ["흰색","베이지"];
 
     const goodBoosted = this.prioritizeColors(good, boostColors);
     const mehBoosted = this.prioritizeColors(meh, boostColors);
@@ -515,6 +620,58 @@ const App = {
     if (!badList.length && adjusted.meh && adjusted.meh.length) badList = adjusted.meh.slice(0,2);
     this.renderChips(this.el.badChips, badList);
     this.renderChips(this.el.mehChips, adjusted.meh || []);
+  },
+
+  renderStatusCallout(grade, colorName){
+    const iconSrc = (GRADE[grade] && GRADE[grade].icon) ? GRADE[grade].icon : ICON.circle;
+    const phrase = (GRADE[grade] && GRADE[grade].phrase) ? GRADE[grade].phrase : "";
+    const caseKey = findEduKeyFromCases(this.state.selectedPants, colorName);
+    let eduKey = caseKey ? caseKey : getEduKey(this.state.selectedPants, colorName, grade);
+    if ((grade === "강추" || grade === "괜찮음") && eduKey === "avoid") {
+      eduKey = getEduKey(this.state.selectedPants, colorName, grade);
+    }
+    const eduLine = EDU_TEXT[eduKey] || EDU_TEXT.contrast;
+    const pantsLabel = this.formatWithOption(this.state.selectedPants, this.state.selectedBottomFit);
+    const shirtLabel = this.formatWithOption(colorName, this.state.selectedTopType);
+    const styleLine = getStyleLine();
+    const styleHtml = styleLine
+      ? `<div style="color: rgba(15,23,42,.70); font-size:12px; line-height:1.4;">스타일: ${styleLine}</div>`
+      : "";
+
+    this.el.statusCallout.innerHTML = `
+      <div style="display:flex; gap:10px; align-items:flex-start; flex-wrap:wrap;">
+        <span class="badgeIcon">
+          <img class="iconImg" src="${iconSrc}" alt="${grade} 아이콘" />
+          <b>${grade}</b>
+        </span>
+        <div style="display:grid; gap:4px;">
+          <div style="color: rgba(15,23,42,.86); font-size:12px; line-height:1.4;">
+            <b>${pantsLabel}</b> + <b>${shirtLabel}</b>
+          </div>
+          <div style="color: rgba(15,23,42,.70); font-size:12px; line-height:1.45;">
+            ${phrase}
+          </div>
+          <div style="color: rgba(15,23,42,.62); font-size:11px; line-height:1.35;">
+            이유: ${eduLine}
+          </div>
+          ${styleHtml}
+        </div>
+      </div>
+    `;
+  },
+
+  updateStatusCallout(){
+    if (this.state.selectedPants && this.state.selectedShirt && this.state.selectedGrade){
+      this.renderStatusCallout(this.state.selectedGrade, this.state.selectedShirt);
+      return;
+    }
+    if (this.state.selectedPants){
+      const styleLine = getStyleLine();
+      const styleHtml = styleLine
+        ? `<div style="margin-top:6px; color: rgba(15,23,42,.70); font-size:12px; line-height:1.4;">스타일: ${styleLine}</div>`
+        : "";
+      this.el.statusCallout.innerHTML = STRINGS.callout.pantsPicked(this.state.selectedPants) + styleHtml;
+    }
   },
 
   renderChips(el, items){
@@ -576,7 +733,7 @@ const App = {
 
     this.refreshRecommendations();
 
-    this.el.statusCallout.innerHTML = STRINGS.callout.pantsPicked(name);
+    this.updateStatusCallout();
     this.showToast(STRINGS.toast.pantsSelected(name));
   },
 
@@ -594,6 +751,7 @@ const App = {
     this.updateSelectedButtons(this.el.topTypeButtons, name);
     this.showToast(`${name} 선택 ✅`);
     this.refreshRecommendations();
+    this.updateStatusCallout();
   },
 
   formatWithOption(base, opt){
@@ -602,35 +760,10 @@ const App = {
 
   applyShirt(colorName, grade){
     this.state.selectedShirt = colorName;
+    this.state.selectedGrade = grade;
     this.el.shirtFill.setAttribute("fill", COLORS[colorName].hex);
     this.el.shirtPill.textContent = "상의 선택: " + colorName;
-
-    const iconSrc = (GRADE[grade] && GRADE[grade].icon) ? GRADE[grade].icon : ICON.circle;
-    const phrase = (GRADE[grade] && GRADE[grade].phrase) ? GRADE[grade].phrase : "";
-    const eduKey = getEduKey(this.state.selectedPants, colorName, grade);
-    const eduLine = EDU_TEXT[eduKey] || EDU_TEXT.contrast;
-    const pantsLabel = this.formatWithOption(this.state.selectedPants, this.state.selectedBottomFit);
-    const shirtLabel = this.formatWithOption(colorName, this.state.selectedTopType);
-
-    this.el.statusCallout.innerHTML = `
-      <div style="display:flex; gap:10px; align-items:flex-start; flex-wrap:wrap;">
-        <span class="badgeIcon">
-          <img class="iconImg" src="${iconSrc}" alt="${grade} 아이콘" />
-          <b>${grade}</b>
-        </span>
-        <div style="display:grid; gap:4px;">
-          <div style="color: rgba(15,23,42,.86); font-size:12px; line-height:1.4;">
-            <b>${pantsLabel}</b> + <b>${shirtLabel}</b>
-          </div>
-          <div style="color: rgba(15,23,42,.70); font-size:12px; line-height:1.45;">
-            ${phrase}
-          </div>
-          <div style="color: rgba(15,23,42,.62); font-size:11px; line-height:1.35;">
-            이유: ${eduLine}
-          </div>
-        </div>
-      </div>
-    `;
+    this.renderStatusCallout(grade, colorName);
     this.showToast(STRINGS.toast.shirtApplied(colorName));
   },
 
