@@ -466,9 +466,7 @@
       to{ transform: translateX(-50%) translateY(0); opacity:1; }
     }
 
-    #baseMan, #baseMan *{ fill:#111; }
-    .topFill{ fill:#9CA3AF; stroke: rgba(15,23,42,.55); stroke-width:2; stroke-linejoin:round; }
-    .bottomFill{ fill:#6B7280; stroke: rgba(15,23,42,.55); stroke-width:2; stroke-linejoin:round; }
+    #outfitCanvas{ width: 100%; height: auto; display:block; }
 
     @media (prefers-reduced-motion: reduce){
       *, *::before, *::after{
@@ -514,56 +512,7 @@
 
             <div class="outfitGrid">
               <div class="figure" aria-label="상의/하의 그림">
-                <svg id="outfitSvg" width="360" height="320" viewBox="0 0 200 260" role="img" aria-label="상의와 하의">
-                  <!-- BASE MAN -->
-                  <g id="baseMan">
-                    <circle cx="100" cy="28" r="16" />
-                    <rect x="70" y="46" width="60" height="70" rx="14" />
-                    <rect x="45" y="66" width="110" height="16" rx="8" />
-                    <rect x="82" y="110" width="36" height="12" rx="6" />
-                  </g>
-
-                  <!-- TOPS -->
-                  <g id="top_shirt" style="display:none;">
-                    <path class="topFill" d="M50 70 L78 52 H122 L150 70 L140 128 H60 Z" />
-                    <path class="topFill" d="M50 70 L30 110 L50 122 L68 92 Z" />
-                    <path class="topFill" d="M150 70 L170 110 L150 122 L132 92 Z" />
-                    <path class="topFill" d="M92 52 L108 52 L100 66 Z" />
-                  </g>
-                  <g id="top_sweat" style="display:block;">
-                    <path class="topFill" d="M48 72 L76 52 H124 L152 72 L144 134 H56 Z" />
-                    <rect class="topFill" x="56" y="120" width="88" height="10" rx="5" />
-                    <rect class="topFill" x="28" y="98" width="22" height="12" rx="6" />
-                    <rect class="topFill" x="150" y="98" width="22" height="12" rx="6" />
-                  </g>
-                  <g id="top_hoodie" style="display:none;">
-                    <path class="topFill" d="M48 72 L76 52 H124 L152 72 L144 136 H56 Z" />
-                    <path class="topFill" d="M70 52 Q100 30 130 52 L120 70 H80 Z" />
-                    <rect class="topFill" x="84" y="110" width="32" height="14" rx="7" />
-                    <rect class="topFill" x="28" y="98" width="22" height="12" rx="6" />
-                    <rect class="topFill" x="150" y="98" width="22" height="12" rx="6" />
-                  </g>
-                  <g id="top_knit" style="display:none;">
-                    <path class="topFill" d="M52 72 L78 52 H122 L148 72 L140 132 H60 Z" />
-                    <rect class="topFill" x="60" y="118" width="80" height="8" rx="4" />
-                    <rect class="topFill" x="34" y="98" width="20" height="10" rx="5" />
-                    <rect class="topFill" x="146" y="98" width="20" height="10" rx="5" />
-                  </g>
-
-                  <!-- BOTTOMS -->
-                  <g id="bottom_slim" style="display:none;">
-                    <path class="bottomFill" d="M78 120 H122 L114 214 H102 L100 154 L98 214 H86 Z" />
-                    <path class="bottomFill" d="M78 120 L62 214 H80 L88 154 L90 214 H104 Z" />
-                  </g>
-                  <g id="bottom_regular" style="display:block;">
-                    <path class="bottomFill" d="M76 120 H124 L116 218 H102 L100 156 L98 218 H84 Z" />
-                    <path class="bottomFill" d="M76 120 L56 218 H76 L88 156 L90 218 H104 Z" />
-                  </g>
-                  <g id="bottom_wide" style="display:none;">
-                    <path class="bottomFill" d="M72 120 H128 L120 222 H98 L96 156 L94 222 H72 Z" />
-                    <path class="bottomFill" d="M72 120 L48 222 H72 L86 156 L90 222 H112 Z" />
-                  </g>
-                </svg>
+                <canvas id="outfitCanvas" width="360" height="320" aria-label="상의와 하의"></canvas>
               </div>
 
               <div class="legend" aria-label="강추/괜찮음/그닥/비추 안내">
@@ -1205,36 +1154,23 @@
     }
 
     // =========================================================
-    // 레이어 토글/색칠
+    // 캔버스 합성 렌더
     // =========================================================
-    const topMap = { "니트":"top_knit", "셔츠":"top_shirt", "후드":"top_hoodie", "맨투맨":"top_sweat" };
-    const botMap = { "슬림":"bottom_slim", "레귤러":"bottom_regular", "와이드":"bottom_wide" };
+    const ASSETS = {
+      mannequin: "assets/mannequin.png",
+      topBase: "assets/top_base.png",
+      topShade: "assets/top_shade.png",
+      pantsBase: "assets/pants_base.png",
+      pantsShade: "assets/pants_shade.png"
+    };
 
-    function showOnly(idsToShow){
-      const all = ["top_knit","top_shirt","top_hoodie","top_sweat","bottom_slim","bottom_regular","bottom_wide"];
-      all.forEach(id=>{
-        const el = document.getElementById(id);
-        if(!el) return;
-        el.style.display = idsToShow.indexOf(id) !== -1 ? "block" : "none";
+    function loadImage(src){
+      return new Promise((resolve, reject)=>{
+        const img = new Image();
+        img.onload = ()=> resolve(img);
+        img.onerror = reject;
+        img.src = src;
       });
-    }
-
-    function applyStyleLayers(selectedTopType, selectedBottomFit){
-      const topId = topMap[selectedTopType] || "top_sweat";
-      const botId = botMap[selectedBottomFit] || "bottom_regular";
-      showOnly([topId, botId]);
-    }
-
-    function paintTop(selectedTopType, hex){
-      const topId = topMap[selectedTopType] || "top_sweat";
-      const els = document.querySelectorAll(`#${topId} .topFill`);
-      els.forEach(el => el.setAttribute("fill", hex));
-    }
-
-    function paintBottom(selectedBottomFit, hex){
-      const botId = botMap[selectedBottomFit] || "bottom_regular";
-      const els = document.querySelectorAll(`#${botId} .bottomFill`);
-      els.forEach(el => el.setAttribute("fill", hex));
     }
 
     // =========================================================
@@ -1247,6 +1183,8 @@
         selectedGrade: null,
         selectedBottomFit: "레귤러",
         selectedTopType: "맨투맨",
+        pantsColor: "#6B7280",
+        topColor: "#9CA3AF",
         reduceMotion: window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches
       },
 
@@ -1259,7 +1197,7 @@
         this.makePantsButtons();
         this.makeBottomFitButtons();
         this.makeTopTypeButtons();
-        applyStyleLayers(this.state.selectedTopType, this.state.selectedBottomFit);
+        this.loadAssets().then(()=> this.renderOutfit());
         this.setNeedsPants(true);
 
         this.el.goodChips.innerHTML = `<div class="muted">하의 색을 먼저 선택하세요.</div>`;
@@ -1271,6 +1209,7 @@
 
       cacheEls(){
         this.el = {
+          outfitCanvas: document.getElementById("outfitCanvas"),
           pantsButtons: document.getElementById("pantsButtons"),
           bottomFitButtons: document.getElementById("bottomFitButtons"),
           topTypeButtons: document.getElementById("topTypeButtons"),
@@ -1327,6 +1266,56 @@
         this.el.legendCircle.src = ICON.circle;
         this.el.legendTriangle.src = ICON.triangle;
         this.el.legendX.src = ICON.x;
+      },
+
+      async loadAssets(){
+        this.assets = {
+          mannequin: await loadImage(ASSETS.mannequin),
+          topBase: await loadImage(ASSETS.topBase),
+          topShade: await loadImage(ASSETS.topShade),
+          pantsBase: await loadImage(ASSETS.pantsBase),
+          pantsShade: await loadImage(ASSETS.pantsShade)
+        };
+        this.setCanvasSize();
+        window.addEventListener("resize", ()=> this.setCanvasSize());
+      },
+
+      setCanvasSize(){
+        const canvas = this.el.outfitCanvas;
+        if (!canvas) return;
+        const dpr = window.devicePixelRatio || 1;
+        const rect = canvas.getBoundingClientRect();
+        canvas.width = Math.max(1, Math.floor(rect.width * dpr));
+        canvas.height = Math.max(1, Math.floor(rect.height * dpr));
+        const ctx = canvas.getContext("2d");
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        this.renderOutfit();
+      },
+
+      renderOutfit(){
+        const canvas = this.el.outfitCanvas;
+        if (!canvas || !this.assets) return;
+        const ctx = canvas.getContext("2d");
+        const w = canvas.width / (window.devicePixelRatio || 1);
+        const h = canvas.height / (window.devicePixelRatio || 1);
+
+        ctx.clearRect(0, 0, w, h);
+        ctx.globalCompositeOperation = "source-over";
+        ctx.drawImage(this.assets.mannequin, 0, 0, w, h);
+
+        ctx.drawImage(this.assets.pantsBase, 0, 0, w, h);
+        ctx.globalCompositeOperation = "source-atop";
+        ctx.fillStyle = this.state.pantsColor;
+        ctx.fillRect(0, 0, w, h);
+        ctx.globalCompositeOperation = "source-over";
+        ctx.drawImage(this.assets.pantsShade, 0, 0, w, h);
+
+        ctx.drawImage(this.assets.topBase, 0, 0, w, h);
+        ctx.globalCompositeOperation = "source-atop";
+        ctx.fillStyle = this.state.topColor;
+        ctx.fillRect(0, 0, w, h);
+        ctx.globalCompositeOperation = "source-over";
+        ctx.drawImage(this.assets.topShade, 0, 0, w, h);
       },
 
       showToast(msg){
@@ -1563,7 +1552,8 @@
       selectPants(name){
         this.state.selectedPants = name;
         this.el.statePill.textContent = "하의 선택: " + name;
-        paintBottom(this.state.selectedBottomFit, COLORS[name].hex);
+        this.state.pantsColor = COLORS[name].hex;
+        this.renderOutfit();
         const btns = this.el.pantsButtons.querySelectorAll("button");
         btns.forEach(btn => {
           if (btn.getAttribute("data-color") === name) btn.classList.add("selected");
@@ -1583,10 +1573,7 @@
         this.state.selectedBottomFit = name;
         this.el.fitPill.textContent = "하의 핏: " + name;
         this.updateSelectedButtons(this.el.bottomFitButtons, name);
-        applyStyleLayers(this.state.selectedTopType, this.state.selectedBottomFit);
-        if (this.state.selectedPants){
-          paintBottom(this.state.selectedBottomFit, COLORS[this.state.selectedPants].hex);
-        }
+        this.renderOutfit();
         this.showToast(`${name} 선택 ✅`);
         this.refreshRecommendations();
         this.updateStatusCallout();
@@ -1596,10 +1583,7 @@
         this.state.selectedTopType = name;
         this.el.topTypePill.textContent = "상의 종류: " + name;
         this.updateSelectedButtons(this.el.topTypeButtons, name);
-        applyStyleLayers(this.state.selectedTopType, this.state.selectedBottomFit);
-        if (this.state.selectedShirt){
-          paintTop(this.state.selectedTopType, COLORS[this.state.selectedShirt].hex);
-        }
+        this.renderOutfit();
         this.showToast(`${name} 선택 ✅`);
         this.refreshRecommendations();
         this.updateStatusCallout();
@@ -1612,7 +1596,8 @@
       applyShirt(colorName, grade){
         this.state.selectedShirt = colorName;
         this.state.selectedGrade = grade;
-        paintTop(this.state.selectedTopType, COLORS[colorName].hex);
+        this.state.topColor = COLORS[colorName].hex;
+        this.renderOutfit();
         this.el.shirtPill.textContent = "상의 선택: " + colorName;
         this.renderStatusCallout(grade, colorName);
         this.showToast(STRINGS.toast.shirtApplied(colorName));
