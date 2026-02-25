@@ -1199,10 +1199,11 @@
       });
     }
 
-    function alphaBoundingBox(img){
+    function alphaBoundingBox(img, alphaMin){
       const w = img.naturalWidth || img.width;
       const h = img.naturalHeight || img.height;
       if (!w || !h) return { empty:true, w:0, h:0, minX:0, minY:0, maxX:0, maxY:0 };
+      const threshold = typeof alphaMin === "number" ? alphaMin : 8;
       const c = document.createElement("canvas");
       c.width = w;
       c.height = h;
@@ -1220,7 +1221,7 @@
         const rowIdx = y * w * 4;
         for (let x = 0; x < w; x++){
           const a = data[rowIdx + x * 4 + 3];
-          if (a > 0){
+          if (a >= threshold){
             if (x < minX) minX = x;
             if (x > maxX) maxX = x;
             rowHas = true;
@@ -1245,11 +1246,11 @@
     }
 
     function pickMask(baseImg, shadeImg){
-      const baseBox = alphaBoundingBox(baseImg);
+      const baseBox = alphaBoundingBox(baseImg, 8);
       if (baseBox && !baseBox.empty && baseBox.w > 0 && baseBox.h > 0){
         return { mask: baseImg, bbox: baseBox, preferShade: false };
       }
-      const shadeBox = alphaBoundingBox(shadeImg);
+      const shadeBox = alphaBoundingBox(shadeImg, 24);
       if (shadeBox && !shadeBox.empty && shadeBox.w > 0 && shadeBox.h > 0){
         return { mask: shadeImg, bbox: shadeBox, preferShade: true };
       }
@@ -1507,12 +1508,6 @@
         const bboxPants = safeBBox(this.bboxPants || alphaBoundingBox(maskPants), maskPants);
         const topFit = fitRectCentered(bboxTop, topBox.x, topBox.y, topBox.w, topBox.h);
         const pantsFit = fitRectCentered(bboxPants, pantsBox.x, pantsBox.y, pantsBox.w, pantsBox.h);
-        // DEBUG: disable auto-gap alignment and force a noticeable scale change
-        const pantsScale = 0.70;
-        pantsFit.w *= pantsScale;
-        pantsFit.h *= pantsScale;
-        pantsFit.x += (pantsFit.w / pantsScale - pantsFit.w) / 2;
-        pantsFit.y += (pantsFit.h / pantsScale - pantsFit.h) / 2;
 
         const drawTinted = (maskImg, shadeImg, colorHex, fit, shadeAsMask) => {
           const tmp = document.createElement("canvas");
@@ -1566,15 +1561,6 @@
         drawUnderlay(maskTop, topFit, underlay);
         drawTinted(maskPants, this.assets.pantsShade, pantsColor, pantsFit, this.pantsShadeAsMask);
         drawTinted(maskTop, this.assets.topShade, topColor, topFit, this.topShadeAsMask);
-
-        // DEBUG: visual guides
-        ctx.save();
-        ctx.strokeStyle = "rgba(239,68,68,0.9)";
-        ctx.lineWidth = 2;
-        ctx.strokeRect(pantsBox.x, pantsBox.y, pantsBox.w, pantsBox.h);
-        ctx.strokeStyle = "rgba(59,130,246,0.9)";
-        ctx.strokeRect(topBox.x, topBox.y, topBox.w, topBox.h);
-        ctx.restore();
       },
 
       showToast(msg){
