@@ -1172,17 +1172,75 @@
     }
 
     // =========================================================
-    // 캔버스 렌더 (컬러 패널)
+    // 캔버스 합성 렌더
     // =========================================================
-    function roundRectPath(ctx, x, y, w, h, r){
-      const radius = Math.max(0, Math.min(r, Math.min(w, h) / 2));
-      ctx.beginPath();
-      ctx.moveTo(x + radius, y);
-      ctx.arcTo(x + w, y, x + w, y + h, radius);
-      ctx.arcTo(x + w, y + h, x, y + h, radius);
-      ctx.arcTo(x, y + h, x, y, radius);
-      ctx.arcTo(x, y, x + w, y, radius);
-      ctx.closePath();
+    const ASSETS = {
+      topBase: "./assets/top_base.png",
+      topShade: "./assets/top_shade.png",
+      pantsBase: "./assets/pants_base.png",
+      pantsShade: "./assets/pants_shade.png"
+    };
+
+    function loadImage(src){
+      return new Promise((resolve, reject)=>{
+        const img = new Image();
+        let triedNoQuery = false;
+        img.onload = ()=> resolve(img);
+        img.onerror = ()=>{
+          console.error("image load failed", src);
+          if (!triedNoQuery){
+            triedNoQuery = true;
+            img.src = src; // retry without cache buster
+            return;
+          }
+          reject({ src: src });
+        };
+        img.src = src + "?v=" + Date.now();
+      });
+    }
+
+    function alphaBoundingBox(img){
+      const w = img.naturalWidth || img.width;
+      const h = img.naturalHeight || img.height;
+      if (!w || !h) return { empty:true, w:0, h:0, minX:0, minY:0, maxX:0, maxY:0 };
+      const c = document.createElement("canvas");
+      c.width = w;
+      c.height = h;
+      const ctx = c.getContext("2d");
+      ctx.drawImage(img, 0, 0);
+      const data = ctx.getImageData(0, 0, w, h).data;
+      let minX = w, minY = h, maxX = -1, maxY = -1;
+      for (let y = 0; y < h; y++){
+        let rowHas = false;
+        const rowIdx = y * w * 4;
+        for (let x = 0; x < w; x++){
+          const a = data[rowIdx + x * 4 + 3];
+          if (a > 0){
+            if (x < minX) minX = x;
+            if (x > maxX) maxX = x;
+            rowHas = true;
+          }
+        }
+        if (rowHas){
+          if (y < minY) minY = y;
+          if (y > maxY) maxY = y;
+        }
+      }
+      if (maxX < 0 || maxY < 0){
+        return { empty:true, w:0, h:0, minX:0, minY:0, maxX:0, maxY:0 };
+      }
+      return { empty:false, w: maxX - minX + 1, h: maxY - minY + 1, minX, minY, maxX, maxY };
+    }
+
+    function fitRect(bbox, dstX, dstY, dstW, dstH){
+      const srcW = Math.max(1, bbox.w);
+      const srcH = Math.max(1, bbox.h);
+      const scale = Math.min(dstW / srcW, dstH / srcH);
+      const drawW = srcW * scale;
+      const drawH = srcH * scale;
+      const drawX = dstX + (dstW - drawW) / 2 - bbox.minX * scale;
+      const drawY = dstY + (dstH - drawH) / 2 - bbox.minY * scale;
+      return { x: drawX, y: drawY, w: drawW, h: drawH, scale };
     }
 
     // =========================================================
@@ -1209,12 +1267,7 @@
         this.makePantsButtons();
         this.makeBottomFitButtons();
         this.makeTopTypeButtons();
-        this.assetsReady = true;
-        if (this.el && this.el.errorBanner){
-          this.el.errorBanner.style.display = "none";
-        }
-        this.setCanvasSize();
-        window.addEventListener("resize", ()=> this.setCanvasSize());
+        await this.loadAssets();
         this.setNeedsPants(true);
 
         this.el.goodChips.innerHTML = `<div class="muted">하의 색을 먼저 선택하세요.</div>`;
@@ -1286,6 +1339,80 @@
         this.el.legendX.src = ICON.x;
       },
 
+      async loadAssets(){
+        try{
+          this.assets = {
+            topBase: await loadImage(ASSETS.topBase),
+            topShade: await loadImage(ASSETS.topShade),
+            pantsBase: await loadImage(ASSETS.pantsBase),
+            pantsShade: await loadImage(ASSETS.pantsShade)
+          };
+          console.log("loaded", "top_base");
+          console.log("loaded", "top_shade");
+          console.log("loaded", "pants_base");
+          console.log("loaded", "pants_shade");
+          console.log("size", "top_base", this.assets.topBase.naturalWidth, this.assets.topBase.naturalHeight);
+          console.log("size", "top_shade", this.assets.topShade.naturalWidth, this.assets.topShade.naturalHeight);
+          console.log("size", "pants_base", this.assets.pantsBase.naturalWidth, this.assets.pantsBase.naturalHeight);
+          console.log("size", "pants_shade", this.assets.pantsShade.naturalWidth, this.assets.pantsShade.naturalHeight);
+          const sizes = [
+            ["top_base", this.assets.topBase],
+            ["top_shade", this.assets.topShade],
+            ["pants_base", this.assets.pantsBase],
+            ["pants_shade", this.assets.pantsShade]
+          ];
+          const w0 = sizes[0][1].naturalWidth;
+          const h0 = sizes[0][1].naturalHeight;
+          let mismatch = false;
+          for (let i = 1; i < sizes.length; i++){
+            const w = sizes[i][1].naturalWidth;
+            const h = sizes[i][1].naturalHeight;
+            if (w !== w0 || h !== h0){
+              mismatch = true;
+              break;
+            }
+          }
+          if (mismatch){
+            const detail = sizes.map(s=> `${s[0]}=${s[1].naturalWidth}x${s[1].naturalHeight}`).join(", ");
+            console.error("image size mismatch", detail);
+            this.assetsReady = false;
+            this.state.loadError = true;
+            if (this.el && this.el.statusCallout){
+              this.el.statusCallout.textContent = "이미지 크기 불일치: " + detail;
+            }
+            if (this.el && this.el.errorBanner){
+              this.el.errorBanner.textContent = "이미지 크기 불일치: " + detail;
+              this.el.errorBanner.style.display = "block";
+            }
+            return;
+          }
+
+          this.bboxTop = alphaBoundingBox(this.assets.topBase);
+          this.bboxPants = alphaBoundingBox(this.assets.pantsBase);
+          console.log("bbox", "top_base", this.bboxTop);
+          console.log("bbox", "pants_base", this.bboxPants);
+
+          this.assetsReady = true;
+          if (this.el && this.el.errorBanner){
+            this.el.errorBanner.style.display = "none";
+          }
+          this.setCanvasSize();
+          window.addEventListener("resize", ()=> this.setCanvasSize());
+        }catch(e){
+          this.assetsReady = false;
+          this.state.loadError = true;
+          if (this.el && this.el.statusCallout){
+            const badSrc = (e && e.src) ? e.src : String(e);
+            this.el.statusCallout.textContent = "이미지 로드 실패: " + badSrc;
+          }
+          if (this.el && this.el.errorBanner){
+            const badSrc = (e && e.src) ? e.src : String(e);
+            this.el.errorBanner.textContent = "이미지 로드 실패: " + badSrc;
+            this.el.errorBanner.style.display = "block";
+          }
+        }
+      },
+
       setCanvasSize(){
         const canvas = this.el.outfitCanvas;
         if (!canvas) return;
@@ -1317,83 +1444,50 @@
         const h = this.canvasCssH || (canvas.height / (window.devicePixelRatio || 1));
 
         ctx.clearRect(0, 0, w, h);
-        const hasTop = !!this.state.selectedShirt;
-        const hasPants = !!this.state.selectedPants;
         const topColor = this.state.topColor || "#9CA3AF";
         const pantsColor = this.state.pantsColor || "#3A3C43";
-        const topLabel = hasTop ? this.state.selectedShirt : "아직";
-        const pantsLabel = hasPants ? this.state.selectedPants : "아직";
-        const topType = this.state.selectedTopType || "맨투맨";
-        const bottomFit = this.state.selectedBottomFit || "레귤러";
 
-        const padding = Math.max(16, Math.round(Math.min(w, h) * 0.05));
-        const gap = Math.max(14, Math.round(h * 0.045));
-        const cardW = w - padding * 2;
-        const cardH = (h - padding * 2 - gap) / 2;
-        const radius = Math.max(16, Math.round(cardH * 0.09));
-        const border = "rgba(15,23,42,0.12)";
-        const textColor = "rgba(15,23,42,0.9)";
-        const mutedColor = "rgba(15,23,42,0.6)";
-
-        const drawCard = (x, y, fillColor, line1, line2) => {
-          ctx.save();
-          roundRectPath(ctx, x, y, cardW, cardH, radius);
-          ctx.fillStyle = "#ffffff";
-          ctx.fill();
-          ctx.strokeStyle = border;
-          ctx.lineWidth = 1;
-          ctx.stroke();
-
-          const innerPad = Math.max(14, Math.round(cardH * 0.12));
-          const swatchH = Math.max(46, Math.round(cardH * 0.45));
-          const swatchY = y + innerPad;
-          const swatchX = x + innerPad;
-          const swatchW = cardW - innerPad * 2;
-
-          roundRectPath(ctx, swatchX, swatchY, swatchW, swatchH, Math.max(10, Math.round(radius * 0.7)));
-          ctx.fillStyle = fillColor;
-          ctx.fill();
-
-          const textY = swatchY + swatchH + Math.max(12, Math.round(cardH * 0.08));
-          ctx.fillStyle = textColor;
-          ctx.textAlign = "left";
-          ctx.textBaseline = "top";
-          ctx.font = `${Math.max(14, Math.round(cardH * 0.12))}px \"Noto Sans KR\", \"Apple SD Gothic Neo\", sans-serif`;
-          ctx.fillText(line1, swatchX, textY);
-          ctx.fillStyle = mutedColor;
-          ctx.font = `${Math.max(12, Math.round(cardH * 0.1))}px \"Noto Sans KR\", \"Apple SD Gothic Neo\", sans-serif`;
-          ctx.fillText(line2, swatchX, textY + Math.max(18, Math.round(cardH * 0.16)));
-          ctx.restore();
+        const topBox = {
+          x: w * 0.05,
+          y: h * 0.05,
+          w: w * 0.90,
+          h: h * 0.47
+        };
+        const pantsBox = {
+          x: w * 0.05,
+          y: h * 0.45,
+          w: w * 0.90,
+          h: h * 0.53
         };
 
-        drawCard(
-          padding,
-          padding,
-          topColor,
-          `상의 · ${topLabel}`,
-          `(${topType})`
-        );
+        const bboxTop = this.bboxTop || alphaBoundingBox(this.assets.topBase);
+        const bboxPants = this.bboxPants || alphaBoundingBox(this.assets.pantsBase);
+        const topFit = fitRect(bboxTop, topBox.x, topBox.y, topBox.w, topBox.h);
+        const pantsFit = fitRect(bboxPants, pantsBox.x, pantsBox.y, pantsBox.w, pantsBox.h);
 
-        drawCard(
-          padding,
-          padding + cardH + gap,
-          pantsColor,
-          `하의 · ${pantsLabel}`,
-          `(${bottomFit})`
-        );
+        const drawTinted = (baseImg, shadeImg, colorHex, fit) => {
+          const tmp = document.createElement("canvas");
+          tmp.width = Math.max(1, Math.floor(w));
+          tmp.height = Math.max(1, Math.floor(h));
+          const t = tmp.getContext("2d");
 
-        if (hasTop && hasPants){
-          const topDark = isDark(topColor);
-          const pantsDark = isDark(pantsColor);
-          const hint = pantsDark !== topDark ? "대비(안전)" : "톤온톤(무난/난이도)";
-          ctx.save();
-          ctx.fillStyle = mutedColor;
-          ctx.textAlign = "center";
-          ctx.textBaseline = "middle";
-          ctx.font = `${Math.max(12, Math.round(h * 0.035))}px \"Noto Sans KR\", \"Apple SD Gothic Neo\", sans-serif`;
-          ctx.fillText(hint, w / 2, h / 2);
-          ctx.restore();
-        }
+          t.clearRect(0, 0, w, h);
+          t.globalCompositeOperation = "source-over";
+          t.drawImage(baseImg, fit.x, fit.y, fit.w, fit.h);
+
+          t.globalCompositeOperation = "source-in";
+          t.fillStyle = colorHex;
+          t.fillRect(0, 0, w, h);
+
+          t.globalCompositeOperation = "source-over";
+          t.drawImage(shadeImg, fit.x, fit.y, fit.w, fit.h);
+
+          ctx.globalCompositeOperation = "source-over";
+          ctx.drawImage(tmp, 0, 0, w, h);
+        };
+
+        drawTinted(this.assets.pantsBase, this.assets.pantsShade, pantsColor, pantsFit);
+        drawTinted(this.assets.topBase, this.assets.topShade, topColor, topFit);
       },
 
       showToast(msg){
