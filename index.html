@@ -1208,7 +1208,12 @@
       c.height = h;
       const ctx = c.getContext("2d");
       ctx.drawImage(img, 0, 0);
-      const data = ctx.getImageData(0, 0, w, h).data;
+      let data;
+      try{
+        data = ctx.getImageData(0, 0, w, h).data;
+      }catch(e){
+        return { empty:false, w, h, minX:0, minY:0, maxX:w-1, maxY:h-1 };
+      }
       let minX = w, minY = h, maxX = -1, maxY = -1;
       for (let y = 0; y < h; y++){
         let rowHas = false;
@@ -1230,6 +1235,13 @@
         return { empty:true, w:0, h:0, minX:0, minY:0, maxX:0, maxY:0 };
       }
       return { empty:false, w: maxX - minX + 1, h: maxY - minY + 1, minX, minY, maxX, maxY };
+    }
+
+    function safeBBox(bbox, img){
+      if (bbox && !bbox.empty && bbox.w > 0 && bbox.h > 0) return bbox;
+      const w = img.naturalWidth || img.width || 1;
+      const h = img.naturalHeight || img.height || 1;
+      return { empty:false, w, h, minX:0, minY:0, maxX:w-1, maxY:h-1 };
     }
 
     function fitRect(bbox, dstX, dstY, dstW, dstH){
@@ -1460,8 +1472,8 @@
           h: h * 0.53
         };
 
-        const bboxTop = this.bboxTop || alphaBoundingBox(this.assets.topBase);
-        const bboxPants = this.bboxPants || alphaBoundingBox(this.assets.pantsBase);
+        const bboxTop = safeBBox(this.bboxTop || alphaBoundingBox(this.assets.topBase), this.assets.topBase);
+        const bboxPants = safeBBox(this.bboxPants || alphaBoundingBox(this.assets.pantsBase), this.assets.pantsBase);
         const topFit = fitRect(bboxTop, topBox.x, topBox.y, topBox.w, topBox.h);
         const pantsFit = fitRect(bboxPants, pantsBox.x, pantsBox.y, pantsBox.w, pantsBox.h);
 
