@@ -1247,13 +1247,13 @@
     function pickMask(baseImg, shadeImg){
       const baseBox = alphaBoundingBox(baseImg);
       if (baseBox && !baseBox.empty && baseBox.w > 0 && baseBox.h > 0){
-        return { mask: baseImg, bbox: baseBox };
+        return { mask: baseImg, bbox: baseBox, preferShade: false };
       }
       const shadeBox = alphaBoundingBox(shadeImg);
       if (shadeBox && !shadeBox.empty && shadeBox.w > 0 && shadeBox.h > 0){
-        return { mask: shadeImg, bbox: shadeBox };
+        return { mask: shadeImg, bbox: shadeBox, preferShade: true };
       }
-      return { mask: baseImg, bbox: safeBBox(baseBox, baseImg) };
+      return { mask: baseImg, bbox: safeBBox(baseBox, baseImg), preferShade: false };
     }
 
     function fitRect(bbox, dstX, dstY, dstW, dstH){
@@ -1415,6 +1415,8 @@
           const pantsMask = pickMask(this.assets.pantsBase, this.assets.pantsShade);
           this.topMask = topMask.mask;
           this.pantsMask = pantsMask.mask;
+          this.topShadeAsMask = !!topMask.preferShade;
+          this.pantsShadeAsMask = !!pantsMask.preferShade;
           this.bboxTop = topMask.bbox;
           this.bboxPants = pantsMask.bbox;
           console.log("bbox", "top_base", this.bboxTop);
@@ -1495,7 +1497,7 @@
         const topFit = fitRect(bboxTop, topBox.x, topBox.y, topBox.w, topBox.h);
         const pantsFit = fitRect(bboxPants, pantsBox.x, pantsBox.y, pantsBox.w, pantsBox.h);
 
-        const drawTinted = (maskImg, shadeImg, colorHex, fit) => {
+        const drawTinted = (maskImg, shadeImg, colorHex, fit, shadeAsMask) => {
           const tmp = document.createElement("canvas");
           tmp.width = Math.max(1, Math.floor(w));
           tmp.height = Math.max(1, Math.floor(h));
@@ -1509,15 +1511,24 @@
           t.fillStyle = colorHex;
           t.fillRect(0, 0, w, h);
 
-          t.globalCompositeOperation = "source-over";
-          t.drawImage(shadeImg, fit.x, fit.y, fit.w, fit.h);
+          if (shadeAsMask){
+            t.globalCompositeOperation = "multiply";
+            t.drawImage(shadeImg, fit.x, fit.y, fit.w, fit.h);
+            t.globalCompositeOperation = "source-over";
+            t.globalAlpha = 0.55;
+            t.drawImage(shadeImg, fit.x, fit.y, fit.w, fit.h);
+            t.globalAlpha = 1;
+          }else{
+            t.globalCompositeOperation = "source-over";
+            t.drawImage(shadeImg, fit.x, fit.y, fit.w, fit.h);
+          }
 
           ctx.globalCompositeOperation = "source-over";
           ctx.drawImage(tmp, 0, 0, w, h);
         };
 
-        drawTinted(maskPants, this.assets.pantsShade, pantsColor, pantsFit);
-        drawTinted(maskTop, this.assets.topShade, topColor, topFit);
+        drawTinted(maskPants, this.assets.pantsShade, pantsColor, pantsFit, this.pantsShadeAsMask);
+        drawTinted(maskTop, this.assets.topShade, topColor, topFit, this.topShadeAsMask);
       },
 
       showToast(msg){
