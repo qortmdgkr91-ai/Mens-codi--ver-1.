@@ -1244,6 +1244,18 @@
       return { empty:false, w, h, minX:0, minY:0, maxX:w-1, maxY:h-1 };
     }
 
+    function pickMask(baseImg, shadeImg){
+      const baseBox = alphaBoundingBox(baseImg);
+      if (baseBox && !baseBox.empty && baseBox.w > 0 && baseBox.h > 0){
+        return { mask: baseImg, bbox: baseBox };
+      }
+      const shadeBox = alphaBoundingBox(shadeImg);
+      if (shadeBox && !shadeBox.empty && shadeBox.w > 0 && shadeBox.h > 0){
+        return { mask: shadeImg, bbox: shadeBox };
+      }
+      return { mask: baseImg, bbox: safeBBox(baseBox, baseImg) };
+    }
+
     function fitRect(bbox, dstX, dstY, dstW, dstH){
       const srcW = Math.max(1, bbox.w);
       const srcH = Math.max(1, bbox.h);
@@ -1399,8 +1411,12 @@
             return;
           }
 
-          this.bboxTop = alphaBoundingBox(this.assets.topBase);
-          this.bboxPants = alphaBoundingBox(this.assets.pantsBase);
+          const topMask = pickMask(this.assets.topBase, this.assets.topShade);
+          const pantsMask = pickMask(this.assets.pantsBase, this.assets.pantsShade);
+          this.topMask = topMask.mask;
+          this.pantsMask = pantsMask.mask;
+          this.bboxTop = topMask.bbox;
+          this.bboxPants = pantsMask.bbox;
           console.log("bbox", "top_base", this.bboxTop);
           console.log("bbox", "pants_base", this.bboxPants);
 
@@ -1472,12 +1488,14 @@
           h: h * 0.53
         };
 
-        const bboxTop = safeBBox(this.bboxTop || alphaBoundingBox(this.assets.topBase), this.assets.topBase);
-        const bboxPants = safeBBox(this.bboxPants || alphaBoundingBox(this.assets.pantsBase), this.assets.pantsBase);
+        const maskTop = this.topMask || this.assets.topBase;
+        const maskPants = this.pantsMask || this.assets.pantsBase;
+        const bboxTop = safeBBox(this.bboxTop || alphaBoundingBox(maskTop), maskTop);
+        const bboxPants = safeBBox(this.bboxPants || alphaBoundingBox(maskPants), maskPants);
         const topFit = fitRect(bboxTop, topBox.x, topBox.y, topBox.w, topBox.h);
         const pantsFit = fitRect(bboxPants, pantsBox.x, pantsBox.y, pantsBox.w, pantsBox.h);
 
-        const drawTinted = (baseImg, shadeImg, colorHex, fit) => {
+        const drawTinted = (maskImg, shadeImg, colorHex, fit) => {
           const tmp = document.createElement("canvas");
           tmp.width = Math.max(1, Math.floor(w));
           tmp.height = Math.max(1, Math.floor(h));
@@ -1485,7 +1503,7 @@
 
           t.clearRect(0, 0, w, h);
           t.globalCompositeOperation = "source-over";
-          t.drawImage(baseImg, fit.x, fit.y, fit.w, fit.h);
+          t.drawImage(maskImg, fit.x, fit.y, fit.w, fit.h);
 
           t.globalCompositeOperation = "source-in";
           t.fillStyle = colorHex;
@@ -1498,8 +1516,8 @@
           ctx.drawImage(tmp, 0, 0, w, h);
         };
 
-        drawTinted(this.assets.pantsBase, this.assets.pantsShade, pantsColor, pantsFit);
-        drawTinted(this.assets.topBase, this.assets.topShade, topColor, topFit);
+        drawTinted(maskPants, this.assets.pantsShade, pantsColor, pantsFit);
+        drawTinted(maskTop, this.assets.topShade, topColor, topFit);
       },
 
       showToast(msg){
