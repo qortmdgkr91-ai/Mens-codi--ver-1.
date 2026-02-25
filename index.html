@@ -1507,21 +1507,12 @@
         const bboxPants = safeBBox(this.bboxPants || alphaBoundingBox(maskPants), maskPants);
         const topFit = fitRectCentered(bboxTop, topBox.x, topBox.y, topBox.w, topBox.h);
         const pantsFit = fitRectCentered(bboxPants, pantsBox.x, pantsBox.y, pantsBox.w, pantsBox.h);
-        const pantsScale = 0.86;
+        // DEBUG: disable auto-gap alignment and force a noticeable scale change
+        const pantsScale = 0.70;
         pantsFit.w *= pantsScale;
         pantsFit.h *= pantsScale;
         pantsFit.x += (pantsFit.w / pantsScale - pantsFit.w) / 2;
         pantsFit.y += (pantsFit.h / pantsScale - pantsFit.h) / 2;
-        const topSilBottom = topFit.y + bboxTop.maxY * topFit.scale;
-        const pantsSilTop = pantsFit.y + bboxPants.minY * pantsFit.scale;
-        const desiredGap = h * 0.015;
-        let shift = (topSilBottom + desiredGap) - pantsSilTop;
-        if (Math.abs(shift) > 0.5){
-          const minY = pantsBox.y - bboxPants.minY * pantsFit.scale;
-          const maxY = pantsBox.y + pantsBox.h - (bboxPants.maxY * pantsFit.scale);
-          const nextY = Math.min(Math.max(pantsFit.y + shift, minY), maxY);
-          pantsFit.y = nextY;
-        }
 
         const drawTinted = (maskImg, shadeImg, colorHex, fit, shadeAsMask) => {
           const tmp = document.createElement("canvas");
@@ -1575,6 +1566,15 @@
         drawUnderlay(maskTop, topFit, underlay);
         drawTinted(maskPants, this.assets.pantsShade, pantsColor, pantsFit, this.pantsShadeAsMask);
         drawTinted(maskTop, this.assets.topShade, topColor, topFit, this.topShadeAsMask);
+
+        // DEBUG: visual guides
+        ctx.save();
+        ctx.strokeStyle = "rgba(239,68,68,0.9)";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(pantsBox.x, pantsBox.y, pantsBox.w, pantsBox.h);
+        ctx.strokeStyle = "rgba(59,130,246,0.9)";
+        ctx.strokeRect(topBox.x, topBox.y, topBox.w, topBox.h);
+        ctx.restore();
       },
 
       showToast(msg){
