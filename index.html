@@ -1527,6 +1527,26 @@
           ctx.drawImage(tmp, 0, 0, w, h);
         };
 
+        const drawUnderlay = (maskImg, fit, color) => {
+          const tmp = document.createElement("canvas");
+          tmp.width = Math.max(1, Math.floor(w));
+          tmp.height = Math.max(1, Math.floor(h));
+          const t = tmp.getContext("2d");
+
+          t.clearRect(0, 0, w, h);
+          t.globalCompositeOperation = "source-over";
+          t.drawImage(maskImg, fit.x, fit.y, fit.w, fit.h);
+          t.globalCompositeOperation = "source-in";
+          t.fillStyle = color;
+          t.fillRect(0, 0, w, h);
+
+          ctx.globalCompositeOperation = "source-over";
+          ctx.drawImage(tmp, 0, 0, w, h);
+        };
+
+        const underlay = "rgba(148,163,184,0.55)";
+        drawUnderlay(maskPants, pantsFit, underlay);
+        drawUnderlay(maskTop, topFit, underlay);
         drawTinted(maskPants, this.assets.pantsShade, pantsColor, pantsFit, this.pantsShadeAsMask);
         drawTinted(maskTop, this.assets.topShade, topColor, topFit, this.topShadeAsMask);
       },
