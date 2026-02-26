@@ -1307,13 +1307,41 @@
       return { x: drawX, y: drawY, w: drawW, h: drawH, scale };
     }
 
-    function fitFromBBoxCentered(bbox, scale, centerX, centerY){
+    /* ===========================
+       FIX 1) alphaBoundingBox 결과(minX/minY...)용 fit 함수 추가
+       =========================== */
+    function fitFromAlphaBBoxCentered(bbox, scale, centerX, centerY){
+      // bbox: {minX,minY,maxX,maxY,w,h}
       const drawW = bbox.w * scale;
       const drawH = bbox.h * scale;
-      const drawX = centerX - (bbox.x + bbox.w / 2) * scale;
-      const drawY = centerY - (bbox.y + bbox.h / 2) * scale;
+
+      // bbox의 "콘텐츠 중심"(min/max 기반)을 center에 맞추기
+      const contentCx = (bbox.minX + bbox.maxX) / 2;
+      const contentCy = (bbox.minY + bbox.maxY) / 2;
+
+      const drawX = centerX - contentCx * scale;
+      const drawY = centerY - contentCy * scale;
+
       return { x: drawX, y: drawY, w: drawW, h: drawH, scale };
     }
+
+    /* ===========================
+       FIX 2) 허리선 앵커(비율)로 정렬: 자산별로 튜닝 가능
+       - 값은 0~1 (bbox 높이 기준)
+       =========================== */
+    const WAIST_ANCHOR = {
+      tops: {        // 상의: bbox의 위에서부터 어느 지점이 "허리선"인가
+        "셔츠": 0.74,
+        "맨투맨": 0.78,
+        "후드": 0.79,
+        "니트": 0.78
+      },
+      pants: {       // 하의: bbox의 위에서부터 어느 지점이 "허리선"인가
+        "슬림": 0.12,
+        "레귤러": 0.12,
+        "와이드": 0.11
+      }
+    };
 
     // =========================================================
     // App
@@ -1516,76 +1544,77 @@
       renderOutfit(){
         const canvas = this.el.outfitCanvas;
         if (!canvas || !this.assetsReady) return;
+
         const ctx = canvas.getContext("2d");
-        const w = this.canvasCssW || (canvas.width / (window.devicePixelRatio || 1));
-        const h = this.canvasCssH || (canvas.height / (window.devicePixelRatio || 1));
+        const dpr = window.devicePixelRatio || 1;
+        const w = this.canvasCssW || (canvas.width / dpr);
+        const h = this.canvasCssH || (canvas.height / dpr);
 
         ctx.clearRect(0, 0, w, h);
+
         const topColor = this.state.topColor || "#9CA3AF";
         const pantsColor = this.state.pantsColor || "#3A3C43";
 
-        const topBox = {
-          x: w * 0.05,
-          y: h * 0.04,
-          w: w * 0.90,
-          h: h * 0.58
-        };
-        const pantsBox = {
-          x: w * 0.08,
-          y: h * 0.50,
-          w: w * 0.84,
-          h: h * 0.44
-        };
-
         const topKey = this.state.selectedTopType || "니트";
         const pantsKey = this.state.selectedBottomFit || "슬림";
-        const topMeta = (this.assetMeta && this.assetMeta.tops && this.assetMeta.tops[topKey]) ? this.assetMeta.tops[topKey] : null;
-        const pantsMeta = (this.assetMeta && this.assetMeta.pants && this.assetMeta.pants[pantsKey]) ? this.assetMeta.pants[pantsKey] : null;
+
+        const topMeta = this.assetMeta?.tops?.[topKey];
+        const pantsMeta = this.assetMeta?.pants?.[pantsKey];
         if (!topMeta || !pantsMeta) return;
 
         const maskTop = topMeta.mask || topMeta.base;
         const maskPants = pantsMeta.mask || pantsMeta.base;
-        const bboxTop = safeBBox(topMeta.bbox || alphaBoundingBox(maskTop), maskTop);
-        const bboxPants = safeBBox(pantsMeta.bbox || alphaBoundingBox(maskPants), maskPants);
-        const targetWaistWidth = w * 0.55;
-        const topScale = targetWaistWidth / Math.max(1, bboxTop.w);
-        const pantsScale = targetWaistWidth / Math.max(1, bboxPants.w);
-        const topCenterX = w * 0.5;
-        const pantsCenterX = w * 0.5;
-        const topCenterY = h * 0.35;
-        const pantsCenterY = h * 0.65;
-        const topFit = fitFromBBoxCentered(bboxTop, topScale, topCenterX, topCenterY);
-        const pantsFit = fitFromBBoxCentered(bboxPants, pantsScale, pantsCenterX, pantsCenterY);
 
-        const topWaistY = topFit.y + bboxTop.maxY * topFit.scale;
-        const pantsWaistY = pantsFit.y + bboxPants.minY * pantsFit.scale;
-        const alignShift = topWaistY - pantsWaistY;
-        pantsFit.y += alignShift;
+        const bboxTop = safeBBox(topMeta.bbox || alphaBoundingBox(maskTop, 8), maskTop);
+        const bboxPants = safeBBox(pantsMeta.bbox || alphaBoundingBox(maskPants, 8), maskPants);
 
-        const topMinY = topFit.y + bboxTop.minY * topFit.scale;
-        const topMaxY = topFit.y + bboxTop.maxY * topFit.scale;
+        // 1) 기준 폭(허리 폭)을 캔버스에 크게 잡기 (기존 0.55 → 0.66 권장)
+        const targetWaistWidth = w * 0.66;
+
+        const topScale0 = targetWaistWidth / Math.max(1, bboxTop.w);
+        const pantsScale0 = targetWaistWidth / Math.max(1, bboxPants.w);
+
+        // 2) 중앙 배치
+        const topFit = fitFromAlphaBBoxCentered(bboxTop, topScale0, w * 0.5, h * 0.35);
+        const pantsFit = fitFromAlphaBBoxCentered(bboxPants, pantsScale0, w * 0.5, h * 0.70);
+
+        // 3) 허리선 앵커로 Y 정렬
+        const topAnchor = (WAIST_ANCHOR.tops[topKey] ?? 0.78);
+        const pantsAnchor = (WAIST_ANCHOR.pants[pantsKey] ?? 0.12);
+
+        const topWaistY   = topFit.y   + (bboxTop.minY   + bboxTop.h   * topAnchor)   * topFit.scale;
+        const pantsWaistY = pantsFit.y + (bboxPants.minY + bboxPants.h * pantsAnchor) * pantsFit.scale;
+
+        const dy = topWaistY - pantsWaistY;
+        pantsFit.y += dy;
+
+        // 4) 상하 전체 그룹이 캔버스를 꽉 채우도록 확대 (기존 0.88 → 0.95 권장)
+        const topMinY   = topFit.y   + bboxTop.minY   * topFit.scale;
+        const topMaxY   = topFit.y   + bboxTop.maxY   * topFit.scale;
         const pantsMinY = pantsFit.y + bboxPants.minY * pantsFit.scale;
         const pantsMaxY = pantsFit.y + bboxPants.maxY * pantsFit.scale;
+
         const groupMinY = Math.min(topMinY, pantsMinY);
         const groupMaxY = Math.max(topMaxY, pantsMaxY);
         const groupH = Math.max(1, groupMaxY - groupMinY);
-        const targetGroupH = h * 0.88;
+
+        const targetGroupH = h * 0.95;
         const scaleUp = targetGroupH / groupH;
-        const groupCenterY = (groupMinY + groupMaxY) / 2;
+
         const groupCenterX = w * 0.5;
+        const groupCenterY = (groupMinY + groupMaxY) / 2;
 
-        topFit.x = groupCenterX + (topFit.x - groupCenterX) * scaleUp;
-        topFit.y = groupCenterY + (topFit.y - groupCenterY) * scaleUp;
-        topFit.w *= scaleUp;
-        topFit.h *= scaleUp;
-        topFit.scale *= scaleUp;
+        const scaleAbout = (fit)=>{
+          fit.x = groupCenterX + (fit.x - groupCenterX) * scaleUp;
+          fit.y = groupCenterY + (fit.y - groupCenterY) * scaleUp;
+          fit.w *= scaleUp;
+          fit.h *= scaleUp;
+          fit.scale *= scaleUp;
+        };
+        scaleAbout(topFit);
+        scaleAbout(pantsFit);
 
-        pantsFit.x = groupCenterX + (pantsFit.x - groupCenterX) * scaleUp;
-        pantsFit.y = groupCenterY + (pantsFit.y - groupCenterY) * scaleUp;
-        pantsFit.w *= scaleUp;
-        pantsFit.h *= scaleUp;
-        pantsFit.scale *= scaleUp;
-
+        // 5) draw helper는 기존 로직 유지
         const drawTinted = (maskImg, shadeImg, colorHex, fit, shadeAsMask) => {
           const tmp = document.createElement("canvas");
           tmp.width = Math.max(1, Math.floor(w));
