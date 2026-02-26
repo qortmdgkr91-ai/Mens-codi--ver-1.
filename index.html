@@ -1175,10 +1175,38 @@
     // 캔버스 합성 렌더
     // =========================================================
     const ASSETS = {
-      topBase: "./assets/top_knit_base.png",
-      topShade: "./assets/top_knit_shade.png",
-      pantsBase: "./assets/pants_slim_base.png",
-      pantsShade: "./assets/pants_slim_shade.png"
+      tops: {
+        "셔츠": {
+          base: "./assets/top_shirt_base.png",
+          shade: "./assets/top_shirt_shade.png"
+        },
+        "맨투맨": {
+          base: "./assets/top_sweatshirt_base.png",
+          shade: "./assets/top_sweatshirt_shade.png"
+        },
+        "후드": {
+          base: "./assets/top_hoodie_base.png",
+          shade: "./assets/top_hoodie_shade.png"
+        },
+        "니트": {
+          base: "./assets/top_knit_base.png",
+          shade: "./assets/top_knit_shade.png"
+        }
+      },
+      pants: {
+        "슬림": {
+          base: "./assets/pants_slim_base.png",
+          shade: "./assets/pants_slim_shade.png"
+        },
+        "레귤러": {
+          base: "./assets/pants_regular_base.png",
+          shade: "./assets/pants_regular_shade.png"
+        },
+        "와이드": {
+          base: "./assets/pants_wide_base.png",
+          shade: "./assets/pants_wide_shade.png"
+        }
+      }
     };
 
     function loadImage(src){
@@ -1299,8 +1327,8 @@
         selectedPants: null,
         selectedShirt: null,
         selectedGrade: null,
-        selectedBottomFit: "레귤러",
-        selectedTopType: "맨투맨",
+        selectedBottomFit: "슬림",
+        selectedTopType: "니트",
         pantsColor: "#3A3C43",
         topColor: "#9CA3AF",
         reduceMotion: window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches
@@ -1389,39 +1417,37 @@
 
       async loadAssets(){
         try{
-          this.assets = {
-            topBase: await loadImage(ASSETS.topBase),
-            topShade: await loadImage(ASSETS.topShade),
-            pantsBase: await loadImage(ASSETS.pantsBase),
-            pantsShade: await loadImage(ASSETS.pantsShade)
-          };
-          console.log("loaded", "top_base");
-          console.log("loaded", "top_shade");
-          console.log("loaded", "pants_base");
-          console.log("loaded", "pants_shade");
-          console.log("size", "top_base", this.assets.topBase.naturalWidth, this.assets.topBase.naturalHeight);
-          console.log("size", "top_shade", this.assets.topShade.naturalWidth, this.assets.topShade.naturalHeight);
-          console.log("size", "pants_base", this.assets.pantsBase.naturalWidth, this.assets.pantsBase.naturalHeight);
-          console.log("size", "pants_shade", this.assets.pantsShade.naturalWidth, this.assets.pantsShade.naturalHeight);
-          const sizes = [
-            ["top_base", this.assets.topBase],
-            ["top_shade", this.assets.topShade],
-            ["pants_base", this.assets.pantsBase],
-            ["pants_shade", this.assets.pantsShade]
-          ];
-          const w0 = sizes[0][1].naturalWidth;
-          const h0 = sizes[0][1].naturalHeight;
-          let mismatch = false;
-          for (let i = 1; i < sizes.length; i++){
-            const w = sizes[i][1].naturalWidth;
-            const h = sizes[i][1].naturalHeight;
-            if (w !== w0 || h !== h0){
-              mismatch = true;
-              break;
-            }
+          this.assets = { tops:{}, pants:{} };
+          const topTypes = Object.keys(ASSETS.tops);
+          const pantFits = Object.keys(ASSETS.pants);
+          for (const t of topTypes){
+            const base = await loadImage(ASSETS.tops[t].base);
+            const shade = await loadImage(ASSETS.tops[t].shade);
+            this.assets.tops[t] = { base, shade };
           }
-          if (mismatch){
-            const detail = sizes.map(s=> `${s[0]}=${s[1].naturalWidth}x${s[1].naturalHeight}`).join(", ");
+          for (const p of pantFits){
+            const base = await loadImage(ASSETS.pants[p].base);
+            const shade = await loadImage(ASSETS.pants[p].shade);
+            this.assets.pants[p] = { base, shade };
+          }
+
+          const sizeErrors = [];
+          topTypes.forEach(t=>{
+            const b = this.assets.tops[t].base;
+            const s = this.assets.tops[t].shade;
+            if (b.naturalWidth !== s.naturalWidth || b.naturalHeight !== s.naturalHeight){
+              sizeErrors.push(`top_${t}=${b.naturalWidth}x${b.naturalHeight}/${s.naturalWidth}x${s.naturalHeight}`);
+            }
+          });
+          pantFits.forEach(p=>{
+            const b = this.assets.pants[p].base;
+            const s = this.assets.pants[p].shade;
+            if (b.naturalWidth !== s.naturalWidth || b.naturalHeight !== s.naturalHeight){
+              sizeErrors.push(`pants_${p}=${b.naturalWidth}x${b.naturalHeight}/${s.naturalWidth}x${s.naturalHeight}`);
+            }
+          });
+          if (sizeErrors.length){
+            const detail = sizeErrors.join(", ");
             console.error("image size mismatch", detail);
             this.assetsReady = false;
             this.state.loadError = true;
@@ -1435,16 +1461,17 @@
             return;
           }
 
-          const topMask = pickMask(this.assets.topBase, this.assets.topShade);
-          const pantsMask = pickMask(this.assets.pantsBase, this.assets.pantsShade);
-          this.topMask = topMask.mask;
-          this.pantsMask = pantsMask.mask;
-          this.topShadeAsMask = !!topMask.preferShade;
-          this.pantsShadeAsMask = !!pantsMask.preferShade;
-          this.bboxTop = topMask.bbox;
-          this.bboxPants = pantsMask.bbox;
-          console.log("bbox", "top_base", this.bboxTop);
-          console.log("bbox", "pants_base", this.bboxPants);
+          this.assetMeta = { tops:{}, pants:{} };
+          topTypes.forEach(t=>{
+            const pair = this.assets.tops[t];
+            const m = pickMask(pair.base, pair.shade);
+            this.assetMeta.tops[t] = { ...pair, mask: m.mask, bbox: m.bbox, shadeAsMask: !!m.preferShade };
+          });
+          pantFits.forEach(p=>{
+            const pair = this.assets.pants[p];
+            const m = pickMask(pair.base, pair.shade);
+            this.assetMeta.pants[p] = { ...pair, mask: m.mask, bbox: m.bbox, shadeAsMask: !!m.preferShade };
+          });
 
           this.assetsReady = true;
           if (this.el && this.el.errorBanner){
@@ -1514,10 +1541,16 @@
           h: h * 0.44
         };
 
-        const maskTop = this.topMask || this.assets.topBase;
-        const maskPants = this.pantsMask || this.assets.pantsBase;
-        const bboxTop = safeBBox(this.bboxTop || alphaBoundingBox(maskTop), maskTop);
-        const bboxPants = safeBBox(this.bboxPants || alphaBoundingBox(maskPants), maskPants);
+        const topKey = this.state.selectedTopType || "니트";
+        const pantsKey = this.state.selectedBottomFit || "슬림";
+        const topMeta = (this.assetMeta && this.assetMeta.tops && this.assetMeta.tops[topKey]) ? this.assetMeta.tops[topKey] : null;
+        const pantsMeta = (this.assetMeta && this.assetMeta.pants && this.assetMeta.pants[pantsKey]) ? this.assetMeta.pants[pantsKey] : null;
+        if (!topMeta || !pantsMeta) return;
+
+        const maskTop = topMeta.mask || topMeta.base;
+        const maskPants = pantsMeta.mask || pantsMeta.base;
+        const bboxTop = safeBBox(topMeta.bbox || alphaBoundingBox(maskTop), maskTop);
+        const bboxPants = safeBBox(pantsMeta.bbox || alphaBoundingBox(maskPants), maskPants);
         const topFit = fitRectWithHeightRatio(bboxTop, topBox.x, topBox.y, topBox.w, topBox.h, 0.92);
         const pantsFit = fitRectWithHeightRatio(bboxPants, pantsBox.x, pantsBox.y, pantsBox.w, pantsBox.h, 0.92);
         const topSilBottom = topFit.y + bboxTop.maxY * topFit.scale;
@@ -1581,8 +1614,8 @@
         const underlay = "rgba(148,163,184,0.55)";
         drawUnderlay(maskPants, pantsFit, underlay);
         drawUnderlay(maskTop, topFit, underlay);
-        drawTinted(maskPants, this.assets.pantsShade, pantsColor, pantsFit, this.pantsShadeAsMask);
-        drawTinted(maskTop, this.assets.topShade, topColor, topFit, this.topShadeAsMask);
+        drawTinted(maskPants, pantsMeta.shade, pantsColor, pantsFit, pantsMeta.shadeAsMask);
+        drawTinted(maskTop, topMeta.shade, topColor, topFit, topMeta.shadeAsMask);
       },
 
       showToast(msg){
