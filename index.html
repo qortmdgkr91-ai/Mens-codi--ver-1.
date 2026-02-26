@@ -1354,6 +1354,66 @@
       return chosen ? (chosen.end - chosen.start + 1) : 0;
     }
 
+    function alphaBottomAtCenterBand(img, bbox, bandRatio, alphaMin){
+      const w = img.naturalWidth || img.width;
+      const h = img.naturalHeight || img.height;
+      if (!w || !h) return bbox.maxY;
+      const threshold = typeof alphaMin === "number" ? alphaMin : 8;
+      const c = document.createElement("canvas");
+      c.width = w;
+      c.height = h;
+      const ctx = c.getContext("2d");
+      ctx.drawImage(img, 0, 0);
+      let data;
+      try{
+        data = ctx.getImageData(0, 0, w, h).data;
+      }catch(e){
+        return bbox.maxY;
+      }
+      const cx = (bbox.minX + bbox.maxX) / 2;
+      const halfBand = Math.max(1, (bbox.w * (bandRatio || 0.35)) / 2);
+      const x0 = Math.max(0, Math.floor(cx - halfBand));
+      const x1 = Math.min(w - 1, Math.floor(cx + halfBand));
+      for (let y = Math.min(h - 1, bbox.maxY); y >= Math.max(0, bbox.minY); y--){
+        const rowIdx = y * w * 4;
+        for (let x = x0; x <= x1; x++){
+          const a = data[rowIdx + x * 4 + 3];
+          if (a >= threshold) return y;
+        }
+      }
+      return bbox.maxY;
+    }
+
+    function alphaTopAtCenterBand(img, bbox, bandRatio, alphaMin){
+      const w = img.naturalWidth || img.width;
+      const h = img.naturalHeight || img.height;
+      if (!w || !h) return bbox.minY;
+      const threshold = typeof alphaMin === "number" ? alphaMin : 8;
+      const c = document.createElement("canvas");
+      c.width = w;
+      c.height = h;
+      const ctx = c.getContext("2d");
+      ctx.drawImage(img, 0, 0);
+      let data;
+      try{
+        data = ctx.getImageData(0, 0, w, h).data;
+      }catch(e){
+        return bbox.minY;
+      }
+      const cx = (bbox.minX + bbox.maxX) / 2;
+      const halfBand = Math.max(1, (bbox.w * (bandRatio || 0.35)) / 2);
+      const x0 = Math.max(0, Math.floor(cx - halfBand));
+      const x1 = Math.min(w - 1, Math.floor(cx + halfBand));
+      for (let y = Math.max(0, bbox.minY); y <= Math.min(h - 1, bbox.maxY); y++){
+        const rowIdx = y * w * 4;
+        for (let x = x0; x <= x1; x++){
+          const a = data[rowIdx + x * 4 + 3];
+          if (a >= threshold) return y;
+        }
+      }
+      return bbox.minY;
+    }
+
     function safeBBox(bbox, img){
       if (bbox && !bbox.empty && bbox.w > 0 && bbox.h > 0) return bbox;
       const w = img.naturalWidth || img.width || 1;
@@ -1694,10 +1754,12 @@
           h * 0.72
         );
 
-        // 3) 상의 밑단과 하의 상단 간격 유지
+        // 3) 상의 밑단(팔 제외 중앙 밴드)과 하의 상단을 맞춤
         const gapPx = 0;
-        const topHemY = topFit.y + bboxTop.maxY * topFit.scale;
-        const pantsTopY = pantsFit.y + bboxPants.minY * pantsFit.scale;
+        const topHemRow = alphaBottomAtCenterBand(maskTop, bboxTop, 0.35, 8);
+        const pantsTopRow = alphaTopAtCenterBand(maskPants, bboxPants, 0.35, 8);
+        const topHemY = topFit.y + topHemRow * topFit.scale;
+        const pantsTopY = pantsFit.y + pantsTopRow * pantsFit.scale;
         pantsFit.y += (topHemY + gapPx - pantsTopY);
 
         // 4) 상하 전체 그룹이 캔버스를 꽉 채우도록 확대 (기존 0.88 → 0.95 권장)
