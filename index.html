@@ -1266,6 +1266,35 @@
       return { empty:false, w: maxX - minX + 1, h: maxY - minY + 1, minX, minY, maxX, maxY };
     }
 
+    function alphaRowWidth(img, y, alphaMin){
+      const w = img.naturalWidth || img.width;
+      const h = img.naturalHeight || img.height;
+      if (!w || !h) return 0;
+      const row = Math.max(0, Math.min(h - 1, Math.round(y)));
+      const threshold = typeof alphaMin === "number" ? alphaMin : 8;
+      const c = document.createElement("canvas");
+      c.width = w;
+      c.height = h;
+      const ctx = c.getContext("2d");
+      ctx.drawImage(img, 0, 0);
+      let data;
+      try{
+        data = ctx.getImageData(0, row, w, 1).data;
+      }catch(e){
+        return 0;
+      }
+      let minX = w, maxX = -1;
+      for (let x = 0; x < w; x++){
+        const a = data[x * 4 + 3];
+        if (a >= threshold){
+          if (x < minX) minX = x;
+          if (x > maxX) maxX = x;
+        }
+      }
+      if (maxX < 0) return 0;
+      return maxX - minX + 1;
+    }
+
     function safeBBox(bbox, img){
       if (bbox && !bbox.empty && bbox.w > 0 && bbox.h > 0) return bbox;
       const w = img.naturalWidth || img.width || 1;
@@ -1570,11 +1599,20 @@
         const bboxTop = safeBBox(topMeta.bbox || alphaBoundingBox(maskTop, 8), maskTop);
         const bboxPants = safeBBox(pantsMeta.bbox || alphaBoundingBox(maskPants, 8), maskPants);
 
-        // 1) 기준 폭(허리 폭)을 캔버스에 크게 잡기 (기존 0.55 → 0.66 권장)
+        // 1) 허리 폭 기준으로 스케일 (상의 허리 폭을 목표로, 하의는 상의와 맞춤)
+        const topAnchor = (WAIST_ANCHOR.tops[topKey] ?? 0.78);
+        const pantsAnchor = (WAIST_ANCHOR.pants[pantsKey] ?? 0.12);
+
+        const topWaistRow = bboxTop.minY + bboxTop.h * topAnchor;
+        const pantsWaistRow = bboxPants.minY + bboxPants.h * pantsAnchor;
+
+        const topWaistRaw = alphaRowWidth(maskTop, topWaistRow, 8) || bboxTop.w;
+        const pantsWaistRaw = alphaRowWidth(maskPants, pantsWaistRow, 8) || bboxPants.w;
+
         const targetWaistWidth = w * 0.66;
 
-        const topScale0 = targetWaistWidth / Math.max(1, bboxTop.w);
-        const pantsScale0 = targetWaistWidth / Math.max(1, bboxPants.w);
+        const topScale0 = targetWaistWidth / Math.max(1, topWaistRaw);
+        const pantsScale0 = topScale0 * (topWaistRaw / Math.max(1, pantsWaistRaw));
 
         // 2) 중앙 배치
         const topFit = fitFromAlphaBBoxCentered(
@@ -1595,9 +1633,6 @@
         );
 
         // 3) 허리선 앵커로 Y 정렬
-        const topAnchor = (WAIST_ANCHOR.tops[topKey] ?? 0.78);
-        const pantsAnchor = (WAIST_ANCHOR.pants[pantsKey] ?? 0.12);
-
         const topWaistY   = topFit.y   + (bboxTop.minY   + bboxTop.h   * topAnchor)   * topFit.scale;
         const pantsWaistY = pantsFit.y + (bboxPants.minY + bboxPants.h * pantsAnchor) * pantsFit.scale;
 
@@ -1616,21 +1651,38 @@
 
         const targetGroupH = h * 0.95;
         const scaleUp = targetGroupH / groupH;
+        const scaleFit = h / groupH;
+        const finalScale = Math.min(scaleUp, scaleFit);
 
         const groupCenterX = w * 0.5;
         const groupCenterY = (groupMinY + groupMaxY) / 2;
 
         const scaleAbout = (fit)=>{
-          fit.x = groupCenterX + (fit.x - groupCenterX) * scaleUp;
-          fit.y = groupCenterY + (fit.y - groupCenterY) * scaleUp;
-          fit.w *= scaleUp;
-          fit.h *= scaleUp;
-          fit.scale *= scaleUp;
+          fit.x = groupCenterX + (fit.x - groupCenterX) * finalScale;
+          fit.y = groupCenterY + (fit.y - groupCenterY) * finalScale;
+          fit.w *= finalScale;
+          fit.h *= finalScale;
+          fit.scale *= finalScale;
         };
         scaleAbout(topFit);
         scaleAbout(pantsFit);
 
-        // 5) draw helper는 기존 로직 유지
+        // 5) 세로 범위 내로 보정(잘림 방지)
+        const topMinY2   = topFit.y   + bboxTop.minY   * topFit.scale;
+        const topMaxY2   = topFit.y   + bboxTop.maxY   * topFit.scale;
+        const pantsMinY2 = pantsFit.y + bboxPants.minY * pantsFit.scale;
+        const pantsMaxY2 = pantsFit.y + bboxPants.maxY * pantsFit.scale;
+        let shiftY = 0;
+        const groupMinY2 = Math.min(topMinY2, pantsMinY2);
+        const groupMaxY2 = Math.max(topMaxY2, pantsMaxY2);
+        if (groupMinY2 < 0) shiftY = -groupMinY2;
+        if (groupMaxY2 + shiftY > h) shiftY -= (groupMaxY2 + shiftY - h);
+        if (shiftY){
+          topFit.y += shiftY;
+          pantsFit.y += shiftY;
+        }
+
+        // 6) draw helper는 기존 로직 유지
         const drawTinted = (maskImg, shadeImg, colorHex, fit, shadeAsMask) => {
           const tmp = document.createElement("canvas");
           tmp.width = Math.max(1, Math.floor(w));
