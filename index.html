@@ -1295,6 +1295,65 @@
       return maxX - minX + 1;
     }
 
+    function alphaRowWidthAtCenter(img, y, centerX, alphaMin){
+      const w = img.naturalWidth || img.width;
+      const h = img.naturalHeight || img.height;
+      if (!w || !h) return 0;
+      const row = Math.max(0, Math.min(h - 1, Math.round(y)));
+      const cx = Math.max(0, Math.min(w - 1, Math.round(centerX)));
+      const threshold = typeof alphaMin === "number" ? alphaMin : 8;
+      const c = document.createElement("canvas");
+      c.width = w;
+      c.height = h;
+      const ctx = c.getContext("2d");
+      ctx.drawImage(img, 0, 0);
+      let data;
+      try{
+        data = ctx.getImageData(0, row, w, 1).data;
+      }catch(e){
+        return 0;
+      }
+      const segments = [];
+      let inSeg = false;
+      let segStart = 0;
+      for (let x = 0; x < w; x++){
+        const a = data[x * 4 + 3];
+        if (a >= threshold){
+          if (!inSeg){
+            inSeg = true;
+            segStart = x;
+          }
+        }else if (inSeg){
+          segments.push({ start: segStart, end: x - 1 });
+          inSeg = false;
+        }
+      }
+      if (inSeg) segments.push({ start: segStart, end: w - 1 });
+      if (!segments.length) return 0;
+
+      let chosen = null;
+      for (const seg of segments){
+        if (cx >= seg.start && cx <= seg.end){
+          chosen = seg;
+          break;
+        }
+      }
+      if (!chosen){
+        let best = null;
+        let bestDist = Infinity;
+        for (const seg of segments){
+          const segCenter = (seg.start + seg.end) / 2;
+          const dist = Math.abs(segCenter - cx);
+          if (dist < bestDist){
+            bestDist = dist;
+            best = seg;
+          }
+        }
+        chosen = best;
+      }
+      return chosen ? (chosen.end - chosen.start + 1) : 0;
+    }
+
     function safeBBox(bbox, img){
       if (bbox && !bbox.empty && bbox.w > 0 && bbox.h > 0) return bbox;
       const w = img.naturalWidth || img.width || 1;
@@ -1606,8 +1665,11 @@
         const topWaistRow = bboxTop.minY + bboxTop.h * topAnchor;
         const pantsWaistRow = bboxPants.minY + bboxPants.h * pantsAnchor;
 
-        const topWaistRaw = alphaRowWidth(maskTop, topWaistRow, 8) || bboxTop.w;
-        const pantsWaistRaw = alphaRowWidth(maskPants, pantsWaistRow, 8) || bboxPants.w;
+        const topCenterX = (bboxTop.minX + bboxTop.maxX) / 2;
+        const pantsCenterX = (bboxPants.minX + bboxPants.maxX) / 2;
+
+        const topWaistRaw = alphaRowWidthAtCenter(maskTop, topWaistRow, topCenterX, 8) || bboxTop.w;
+        const pantsWaistRaw = alphaRowWidthAtCenter(maskPants, pantsWaistRow, pantsCenterX, 8) || bboxPants.w;
 
         const targetWaistWidth = w * 0.66;
 
@@ -1621,7 +1683,7 @@
           maskTop.naturalHeight || maskTop.height,
           topScale0,
           w * 0.5,
-          h * 0.35
+          h * 0.33
         );
         const pantsFit = fitFromAlphaBBoxCentered(
           bboxPants,
@@ -1629,15 +1691,14 @@
           maskPants.naturalHeight || maskPants.height,
           pantsScale0,
           w * 0.5,
-          h * 0.70
+          h * 0.72
         );
 
-        // 3) 허리선 앵커로 Y 정렬
-        const topWaistY   = topFit.y   + (bboxTop.minY   + bboxTop.h   * topAnchor)   * topFit.scale;
-        const pantsWaistY = pantsFit.y + (bboxPants.minY + bboxPants.h * pantsAnchor) * pantsFit.scale;
-
-        const dy = topWaistY - pantsWaistY;
-        pantsFit.y += dy;
+        // 3) 상의 밑단과 하의 상단 간격 유지
+        const gapPx = 10;
+        const topHemY = topFit.y + bboxTop.maxY * topFit.scale;
+        const pantsTopY = pantsFit.y + bboxPants.minY * pantsFit.scale;
+        pantsFit.y += (topHemY + gapPx - pantsTopY);
 
         // 4) 상하 전체 그룹이 캔버스를 꽉 채우도록 확대 (기존 0.88 → 0.95 권장)
         const topMinY   = topFit.y   + bboxTop.minY   * topFit.scale;
@@ -1655,7 +1716,7 @@
         const finalScale = Math.min(scaleUp, scaleFit);
 
         const groupCenterX = w * 0.5;
-        const groupCenterY = (groupMinY + groupMaxY) / 2;
+        const groupCenterY = h * 0.5;
 
         const scaleAbout = (fit)=>{
           fit.x = groupCenterX + (fit.x - groupCenterX) * finalScale;
