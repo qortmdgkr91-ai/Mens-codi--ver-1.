@@ -395,6 +395,48 @@
     @media (max-width: 960px){
       .grid{ grid-template-columns: 1fr; }
     }
+    #legacyStage{
+      display: grid;
+      gap: 10px;
+    }
+    #recUI{
+      display: grid;
+      gap: 10px;
+    }
+    .stageBox{
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.86);
+      border-radius: 14px;
+      padding: 12px;
+      display: grid;
+      gap: 10px;
+    }
+    .stageHead{
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap: 10px;
+      flex-wrap:wrap;
+    }
+    .stageHead b{
+      font-size: 13px;
+      font-weight: 950;
+      letter-spacing:-0.02em;
+      color: rgba(15,23,42,.90);
+    }
+    .stageHead span{
+      font-size: 12px;
+      color: rgba(15,23,42,.62);
+      font-weight: 650;
+    }
+    #outfitCanvas{
+      width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(248,250,252,.95), rgba(241,245,249,.92));
+    }
 
     /* Recommendation UI */
     .card{
@@ -599,8 +641,19 @@
       </section>
 
       <section class="grid" aria-label="추천 UI">
-        <section id="mainLeft"></section>
-        <section id="mainRight"></section>
+        <section id="legacyStage">
+          <div class="stageBox">
+            <div class="stageHead">
+              <b>착장 미리보기</b>
+              <span>추천 UI와 분리된 고정 스테이지</span>
+            </div>
+            <canvas id="outfitCanvas" width="520" height="620" aria-label="착장 캔버스"></canvas>
+          </div>
+        </section>
+        <section id="recUI">
+          <section id="mainLeft"></section>
+          <section id="mainRight"></section>
+        </section>
       </section>
     </main>
   </div>
@@ -945,10 +998,13 @@
         season: null,
         need: null,              // pantsToTop | topToPants
         baseColor: null,         // 선택한 기준 색(하의 or 상의)
-        lastPicked: null          // 마지막으로 클릭한 추천 아이템(표시용)
+        lastPicked: null,         // 마지막으로 클릭한 추천 아이템(표시용)
+        stageTopColor: "#9CA3AF",
+        stagePantsColor: "#3A3C43"
       },
       el: {},
       tip: { visible:false },
+      stage: { ready:false, mannequin:null, topBase:null, topShade:null, pantsBase:null, pantsShade:null },
 
       init(){
         this.cache();
@@ -959,6 +1015,7 @@
         this.syncTabs();
         this.refreshContextBar();
         validateColorsStrict();
+        this.initLegacyStage();
       },
 
       cache(){
@@ -993,7 +1050,8 @@
           ctxNeed: document.getElementById("ctxNeed"),
           ctxBaseColor: document.getElementById("ctxBaseColor"),
           mainLeft: document.getElementById("mainLeft"),
-          mainRight: document.getElementById("mainRight")
+          mainRight: document.getElementById("mainRight"),
+          outfitCanvas: document.getElementById("outfitCanvas")
         };
       },
 
@@ -1113,6 +1171,94 @@
         window.addEventListener("resize", ()=>{ if (this.tip.visible) this.hideTooltip(); }, { passive:true });
       },
 
+      async initLegacyStage(){
+        window.updateOutfit = ({ mode, baseColor })=>{
+          if (!mode || !baseColor) return;
+          this.onBaseColorChanged(mode, baseColor);
+        };
+        window.applyRecommendedColor = ({ mode, recommendedColor })=>{
+          if (!mode || !recommendedColor) return;
+          this.onRecommendedColorPicked(mode, recommendedColor);
+        };
+        await this.ensureStageAssets();
+        this.renderLegacyStage();
+      },
+
+      async ensureStageAssets(){
+        const loadImage = (src)=> new Promise((resolve)=>{
+          const img = new Image();
+          img.onload = ()=> resolve(img);
+          img.onerror = ()=> resolve(null);
+          img.src = src;
+        });
+        const [mannequin, topBase, topShade, pantsBase, pantsShade] = await Promise.all([
+          loadImage("assets/mannequin.png"),
+          loadImage("assets/top_knit_base.png"),
+          loadImage("assets/top_knit_shade.png"),
+          loadImage("assets/pants_slim_base.png"),
+          loadImage("assets/pants_slim_shade.png")
+        ]);
+        this.stage = {
+          ready: !!(topBase && topShade && pantsBase && pantsShade),
+          mannequin, topBase, topShade, pantsBase, pantsShade
+        };
+      },
+
+      tintImage(ctx, img, color, alpha){
+        if (!img) return;
+        const w = ctx.canvas.width;
+        const h = ctx.canvas.height;
+        const off = document.createElement("canvas");
+        off.width = w;
+        off.height = h;
+        const o = off.getContext("2d");
+        o.clearRect(0, 0, w, h);
+        o.drawImage(img, 0, 0, w, h);
+        o.globalCompositeOperation = "source-atop";
+        o.globalAlpha = alpha == null ? 1 : alpha;
+        o.fillStyle = color;
+        o.fillRect(0, 0, w, h);
+        o.globalAlpha = 1;
+        o.globalCompositeOperation = "source-over";
+        ctx.drawImage(off, 0, 0, w, h);
+      },
+
+      renderLegacyStage(){
+        const canvas = this.el.outfitCanvas;
+        if (!canvas) return;
+        const ctx = canvas.getContext("2d");
+        const w = canvas.width;
+        const h = canvas.height;
+        ctx.clearRect(0, 0, w, h);
+
+        if (!this.stage.ready){
+          ctx.fillStyle = "rgba(15,23,42,.62)";
+          ctx.font = "600 14px Pretendard, sans-serif";
+          ctx.fillText("미리보기 에셋을 불러오는 중입니다.", 20, 40);
+          return;
+        }
+
+        if (this.stage.mannequin) ctx.drawImage(this.stage.mannequin, 0, 0, w, h);
+        this.tintImage(ctx, this.stage.pantsBase, this.state.stagePantsColor, 1);
+        if (this.stage.pantsShade) ctx.drawImage(this.stage.pantsShade, 0, 0, w, h);
+        this.tintImage(ctx, this.stage.topBase, this.state.stageTopColor, 1);
+        if (this.stage.topShade) ctx.drawImage(this.stage.topShade, 0, 0, w, h);
+      },
+
+      onBaseColorChanged(mode, baseColor){
+        const hex = swatchHex(baseColor);
+        if (mode === "pantsToTop") this.state.stagePantsColor = hex;
+        if (mode === "topToPants") this.state.stageTopColor = hex;
+        this.renderLegacyStage();
+      },
+
+      onRecommendedColorPicked(mode, recommendedColor){
+        const hex = swatchHex(recommendedColor);
+        if (mode === "pantsToTop") this.state.stageTopColor = hex;
+        if (mode === "topToPants") this.state.stagePantsColor = hex;
+        this.renderLegacyStage();
+      },
+
       // ===== State setters
       setSeason(season, opts){
         this.state.season = season;
@@ -1139,12 +1285,15 @@
         this.state.need = need;
         this.state.baseColor = null;
         this.state.lastPicked = null;
+        this.state.stageTopColor = "#9CA3AF";
+        this.state.stagePantsColor = "#3A3C43";
 
         this.refreshPills();
         this.refreshCTA();
         this.syncGuidance();
         this.syncTabs();
         this.refreshContextBar();
+        this.renderLegacyStage();
 
         this.toast(`${labelNeed(need)} 선택`);
 
@@ -1173,6 +1322,7 @@
               this.state.lastPicked = null;
               this.refreshContextBar();
               this.renderMain();
+              this.onBaseColorChanged("pantsToTop", name);
               this.toast(`${name} 하의 선택`);
             }
           });
@@ -1190,6 +1340,7 @@
               this.state.lastPicked = null;
               this.refreshContextBar();
               this.renderMain();
+              this.onBaseColorChanged("topToPants", name);
               this.toast(`${name} 상의 선택`);
             }
           });
@@ -1223,6 +1374,7 @@
         const onPick = (it)=>{
           this.state.lastPicked = it;
           this.refreshContextBar();
+          this.onRecommendedColorPicked(need, it.color);
           this.toast(`${it.color} 선택 (${it.grade})`);
         };
 
