@@ -669,6 +669,136 @@
       to{ transform: translateX(-50%) translateY(0); opacity:1; }
     }
 
+    /* Line-first layout overrides */
+    .hero{
+      background: transparent;
+      border: 0;
+      box-shadow: none;
+      padding: 4px 2px 6px;
+    }
+    .overline{
+      font-size: 11px;
+      color: rgba(15,23,42,.54);
+      letter-spacing: 0.12em;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+    .hero h1{
+      font-size: 38px;
+      line-height: 1.04;
+      letter-spacing: -0.06em;
+      font-weight: 950;
+    }
+    .subline{
+      color: rgba(15,23,42,.52);
+      letter-spacing: 0.10em;
+      text-transform: uppercase;
+    }
+    .statusLine{
+      display:flex;
+      justify-content:center;
+      gap: 10px;
+      flex-wrap:wrap;
+      margin-top: 8px;
+      color: rgba(15,23,42,.62);
+      font-size: 12px;
+      font-weight: 650;
+    }
+    .statusLine b{ color: rgba(15,23,42,.88); font-weight: 900; }
+    .dotSep{ opacity:.45; }
+    .panel{
+      padding: 14px 2px 4px;
+      border-top: 1px solid var(--stroke);
+      border-radius: 0;
+      background: transparent;
+      border-left: 0;
+      border-right: 0;
+      border-bottom: 0;
+      box-shadow: none;
+    }
+    .section{
+      padding: 14px 2px 4px;
+      border-top: 1px solid var(--stroke);
+    }
+    .section:first-child{
+      border-top: 0;
+      padding-top: 0;
+    }
+    .sectionHead{
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap: 10px;
+      flex-wrap:wrap;
+      margin-bottom: 10px;
+    }
+    .sectionHead b{
+      font-weight: 950;
+      font-size: 14px;
+      letter-spacing:-0.02em;
+    }
+    .sectionHead span{
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 650;
+    }
+    .pickBanner{
+      padding: 10px 0 2px;
+      background: transparent;
+      border: 0;
+      box-shadow: none;
+      margin-bottom: 8px;
+    }
+    .pickBanner .left{ display: contents; }
+    .pickBanner span{ margin-left: 8px; font-weight: 650; }
+    .grid{
+      border-top: 1px solid var(--stroke);
+      padding-top: 14px;
+    }
+    .rowActions{
+      display:flex;
+      gap: 10px;
+      justify-content:flex-end;
+      flex-wrap:wrap;
+      margin-top: 10px;
+      border-top: 1px solid var(--stroke);
+      padding-top: 12px;
+    }
+    .helpBox{ display:none !important; }
+    .tooltip{
+      position: fixed;
+      z-index: 20000;
+      max-width: min(360px, calc(100vw - 24px));
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: rgba(255,255,255,.95);
+      border: 1px solid var(--stroke);
+      box-shadow: 0 16px 40px rgba(15,23,42,.12);
+      display:none;
+      transform: translateY(6px);
+      opacity: 0;
+      transition: opacity .12s ease, transform .12s ease;
+      pointer-events:none;
+    }
+    .tooltip.show{
+      display:block;
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .tooltip .tTitle{
+      font-size: 12px;
+      font-weight: 950;
+      color: rgba(15,23,42,.86);
+      margin-bottom: 6px;
+    }
+    .tooltip .tDesc{
+      font-size: 12px;
+      line-height: 1.55;
+      color: rgba(15,23,42,.72);
+      white-space: pre-line;
+      font-weight: 650;
+    }
+
     #outfitCanvas{ width: 100%; height: auto; display:block; }
 
     @media (prefers-reduced-motion: reduce){
@@ -686,90 +816,59 @@
   <div class="errorBanner" id="errorBanner">이미지 문제를 확인 중입니다.</div>
 
   <div class="shell">
-    <section class="hero">
+    <header class="hero" aria-label="헤더">
       <div class="heroInner">
         <div class="overline">남자는 핏과 컬러가 전부다.</div>
         <h1>오늘 뭐 입지?</h1>
         <div class="subline">Men's fashion color match</div>
       </div>
-      <div class="heroMeta">
-        <span class="pill" id="pillSeason">1) 계절: 아직</span>
-        <span class="pill" id="pillNeed">2) 기능: 아직</span>
+      <div class="statusLine" aria-label="선택 상태">
+        <div><b id="pillSeason">1) 계절</b>: <span id="pillSeasonVal">아직</span></div>
+        <span class="dotSep">·</span>
+        <div><b id="pillNeed">2) 기능</b>: <span id="pillNeedVal">아직</span></div>
       </div>
-    </section>
+    </header>
 
-    <section class="panel page show" id="pageSetup" aria-label="첫 페이지: 옵션 선택">
-      <div class="panelHead">
-        <div class="panelTitle">옵션 선택</div>
-        <div class="meta">
-          <span>두 개를 고르면 자동으로 넘어갑니다</span>
-        </div>
-      </div>
-
+    <main class="page show" id="pageSetup" aria-label="첫 페이지: 옵션 선택">
       <div class="pickBanner show" id="bannerSeason" role="note" aria-live="polite">
-        <div class="left">
-          <span class="dot" aria-hidden="true"></span>
-          <div style="display:grid; gap:2px;">
-            <b>먼저 계절을 선택하세요</b>
-            <span>봄 / 여름 / 가을 / 겨울 중 하나를 고르세요.</span>
-          </div>
-        </div>
+        <span class="dot" aria-hidden="true"></span>
+        <b>먼저 계절을 선택하세요</b>
+        <span>봄 / 여름 / 가을 / 겨울 중 하나</span>
       </div>
 
-      <div class="setupGrid">
-        <div class="setupSection" id="secSeason">
-          <div class="h">
-            <b>1. 언제 입으실건가요?</b>
-            <span>버튼에 마우스를 올리면 설명이 표시됩니다.</span>
-          </div>
-
-          <div class="choiceRow">
-            <div class="btnGrid4 attention" id="seasonButtons">
-              <button class="btn" type="button" data-season="봄">봄</button>
-              <button class="btn" type="button" data-season="여름">여름</button>
-              <button class="btn" type="button" data-season="가을">가을</button>
-              <button class="btn" type="button" data-season="겨울">겨울</button>
-            </div>
-            <aside class="helpBox" aria-live="polite">
-              <div class="title">상세 설명</div>
-              <div class="desc" id="seasonHelp">-상세 설명 준비중-</div>
-            </aside>
-          </div>
+      <section class="section" id="secSeason" aria-label="계절 선택">
+        <div class="sectionHead">
+          <b>1. 언제 입으실건가요?</b>
+          <span>버튼에 마우스를 올리면 설명이 뜹니다</span>
         </div>
-
-        <div class="pickBanner" id="bannerNeed" role="note" aria-live="polite">
-          <div class="left">
-            <span class="dot" aria-hidden="true"></span>
-            <div style="display:grid; gap:2px;">
-              <b>다음으로 필요한 기능을 선택하세요</b>
-              <span>2개 중 하나를 고르면 자동으로 넘어갑니다.</span>
-            </div>
-          </div>
+        <div class="btnGrid4 attention" id="seasonButtons">
+          <button class="btn" type="button" data-season="봄">봄</button>
+          <button class="btn" type="button" data-season="여름">여름</button>
+          <button class="btn" type="button" data-season="가을">가을</button>
+          <button class="btn" type="button" data-season="겨울">겨울</button>
         </div>
+      </section>
 
-        <div class="setupSection" id="secNeed">
-          <div class="h">
-            <b>2. 무엇이 필요한가요?</b>
-            <span>버튼에 마우스를 올리면 설명이 표시됩니다.</span>
-          </div>
+      <div class="pickBanner" id="bannerNeed" role="note" aria-live="polite">
+        <span class="dot" aria-hidden="true"></span>
+        <b>다음으로 필요한 기능을 선택하세요</b>
+        <span>2개 중 하나를 고르면 자동 이동</span>
+      </div>
 
-          <div class="choiceRow">
-            <div class="btnGrid2" id="needButtons">
-              <button class="btn" type="button" data-need="pantsToTop">하의에 맞는 상의 (기본)</button>
-              <button class="btn" type="button" data-need="topToPants">상의에 맞는 하의</button>
-            </div>
-            <aside class="helpBox" aria-live="polite">
-              <div class="title">상세 설명</div>
-              <div class="desc" id="needHelp">버튼에 마우스를 올리면 설명이 표시됩니다.</div>
-            </aside>
-          </div>
+      <section class="section" id="secNeed" aria-label="기능 선택">
+        <div class="sectionHead">
+          <b>2. 무엇이 필요한가요?</b>
+          <span>버튼 hover 시 상세 설명</span>
         </div>
-
-        <div class="setupFooter">
+        <div class="btnGrid2" id="needButtons">
+          <button class="btn" type="button" data-need="pantsToTop">하의에 맞는 상의 (기본)</button>
+          <button class="btn" type="button" data-need="topToPants">상의에 맞는 하의</button>
+        </div>
+        <div class="rowActions">
           <button class="btn ghost" type="button" id="btnReset">초기화</button>
         </div>
-      </div>
-    </section>
+      </section>
+    </main>
 
     <section class="page" id="pageMain" aria-label="두 번째 페이지: 추천 화면">
       <div class="mainTopBar">
@@ -919,6 +1018,11 @@
       </section>
     </section>
 
+  </div>
+
+  <div class="tooltip" id="tooltip" role="note" aria-live="polite">
+    <div class="tTitle" id="tooltipTitle">상세 설명</div>
+    <div class="tDesc" id="tooltipDesc">-상세 설명 준비중-</div>
   </div>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
@@ -2602,6 +2706,12 @@
       outerToIn:  "- 오늘 입을 아우터를 고르면 안에 입을 상/하의의 컬러 매치를 추천해드립니다. (서비스 준비중)",
       premium:    "- 현재 서비스 준비중입니다."
     };
+    const SEASON_DESC = {
+      "봄": "-상세 설명 준비중-",
+      "여름": "-상세 설명 준비중-",
+      "가을": "-상세 설명 준비중-",
+      "겨울": "-상세 설명 준비중-"
+    };
 
     const AppSetup = {
       state: {
@@ -2625,19 +2735,25 @@
           toast: document.getElementById("toast"),
           seasonButtons: document.getElementById("seasonButtons"),
           needButtons: document.getElementById("needButtons"),
-          seasonHelp: document.getElementById("seasonHelp"),
-          needHelp: document.getElementById("needHelp"),
-          pillSeason: document.getElementById("pillSeason"),
-          pillNeed: document.getElementById("pillNeed"),
+          pillSeasonVal: document.getElementById("pillSeasonVal"),
+          pillNeedVal: document.getElementById("pillNeedVal"),
           bannerSeason: document.getElementById("bannerSeason"),
           bannerNeed: document.getElementById("bannerNeed"),
           btnReset: document.getElementById("btnReset"),
           btnBack: document.getElementById("btnBack"),
-          pillFromSetup: document.getElementById("pillFromSetup")
+          pillFromSetup: document.getElementById("pillFromSetup"),
+          tooltip: document.getElementById("tooltip"),
+          tooltipTitle: document.getElementById("tooltipTitle"),
+          tooltipDesc: document.getElementById("tooltipDesc")
         };
       },
 
       bind(){
+        window.addEventListener("mousemove", (e)=>{
+          if (!this.tipVisible) return;
+          this.positionTooltip(e.clientX, e.clientY);
+        }, { passive:true });
+
         this.el.seasonButtons.querySelectorAll("button").forEach(btn=>{
           const season = btn.getAttribute("data-season");
           btn.addEventListener("click", ()=>{
@@ -2647,11 +2763,11 @@
             this.showToast(`${season} 선택 ✅`);
             this.syncGuidance();
           });
-          btn.addEventListener("mouseenter", ()=>{
-            this.el.seasonHelp.textContent = "-상세 설명 준비중-";
+          btn.addEventListener("mouseenter", (e)=>{
+            this.showTooltip("상세 설명", SEASON_DESC[season] || "-상세 설명 준비중-", e.clientX, e.clientY);
           });
           btn.addEventListener("mouseleave", ()=>{
-            this.el.seasonHelp.textContent = "-상세 설명 준비중-";
+            this.hideTooltip();
           });
         });
 
@@ -2670,12 +2786,13 @@
             this.syncGuidance();
             this.autoGoMainIfReady();
           });
-          btn.addEventListener("mouseenter", ()=>{
+          btn.addEventListener("mouseenter", (e)=>{
             if (!need) return;
-            this.el.needHelp.textContent = NEED_DESC[need] || "버튼에 마우스를 올리면 설명이 표시됩니다.";
+            const desc = NEED_DESC[need] || "버튼에 마우스를 올리면 설명이 표시됩니다.";
+            this.showTooltip("상세 설명", desc, e.clientX, e.clientY);
           });
           btn.addEventListener("mouseleave", ()=>{
-            this.el.needHelp.textContent = "버튼에 마우스를 올리면 설명이 표시됩니다.";
+            this.hideTooltip();
           });
         });
 
@@ -2684,8 +2801,7 @@
           this.state.need = null;
           this.clearSelected(this.el.seasonButtons);
           this.clearSelected(this.el.needButtons);
-          this.el.seasonHelp.textContent = "-상세 설명 준비중-";
-          this.el.needHelp.textContent = "버튼에 마우스를 올리면 설명이 표시됩니다.";
+          this.hideTooltip();
           this.showPage("setup");
           this.syncGuidance();
           this.refreshPills();
@@ -2695,8 +2811,12 @@
         this.el.btnBack.addEventListener("click", ()=>{
           this.showPage("setup");
           this.syncGuidance();
+          this.hideTooltip();
           this.showToast("옵션 선택으로 이동");
         });
+
+        window.addEventListener("scroll", ()=>{ if (this.tipVisible) this.hideTooltip(); }, { passive:true });
+        window.addEventListener("resize", ()=>{ if (this.tipVisible) this.hideTooltip(); }, { passive:true });
       },
 
       labelNeed(need){
@@ -2723,8 +2843,8 @@
       },
 
       refreshPills(){
-        this.el.pillSeason.textContent = "1) 계절: " + (this.state.season || "아직");
-        this.el.pillNeed.textContent = "2) 기능: " + (this.state.need ? this.labelNeed(this.state.need) : "아직");
+        this.el.pillSeasonVal.textContent = this.state.season || "아직";
+        this.el.pillNeedVal.textContent = this.state.need ? this.labelNeed(this.state.need) : "아직";
       },
 
       syncGuidance(){
@@ -2777,6 +2897,36 @@
         this.el.toast.classList.add("show");
         clearTimeout(this._t);
         this._t = setTimeout(()=> this.el.toast.classList.remove("show"), 1200);
+      },
+
+      showTooltip(title, desc, x, y){
+        this.tipVisible = true;
+        this.el.tooltipTitle.textContent = title || "상세 설명";
+        this.el.tooltipDesc.textContent = desc || "-상세 설명 준비중-";
+        this.el.tooltip.classList.add("show");
+        this.positionTooltip(x, y);
+      },
+
+      hideTooltip(){
+        this.tipVisible = false;
+        this.el.tooltip.classList.remove("show");
+      },
+
+      positionTooltip(x, y){
+        const tip = this.el.tooltip;
+        const pad = 12;
+        const offset = 14;
+        const rect = tip.getBoundingClientRect();
+        let left = x + offset;
+        let top = y + offset;
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+        if (left + rect.width + pad > vw) left = x - rect.width - offset;
+        if (left < pad) left = pad;
+        if (top + rect.height + pad > vh) top = y - rect.height - offset;
+        if (top < pad) top = pad;
+        tip.style.left = left + "px";
+        tip.style.top = top + "px";
       }
     };
 
