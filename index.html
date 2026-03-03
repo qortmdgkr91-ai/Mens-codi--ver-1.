@@ -352,6 +352,66 @@
       margin-top: 6px;
     }
     #pageSetup .btn{ justify-content:center; }
+    #seasonButtons .btn.selected,
+    #needButtons .btn.selected{
+      color: rgba(255,255,255,.96);
+      background: linear-gradient(135deg, rgba(99,102,241,.95), rgba(59,130,246,.90));
+      border: 1px solid rgba(255,255,255,.22);
+      box-shadow: 0 16px 36px rgba(59,130,246,.18);
+    }
+    .pickBanner{
+      display:none;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 16px;
+      background: linear-gradient(180deg, rgba(79,70,229,.12), rgba(79,70,229,.07));
+      border: 1px solid rgba(79,70,229,.28);
+      box-shadow: 0 12px 26px rgba(15, 23, 42, .08);
+      margin-bottom: 10px;
+    }
+    .pickBanner.show{ display:flex; }
+    .pickBanner .left{
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      flex-wrap:wrap;
+    }
+    .pickBanner .dot{
+      width: 10px; height: 10px;
+      border-radius: 999px;
+      background: var(--accent);
+      box-shadow: 0 0 0 6px rgba(79,70,229,.12);
+      flex: 0 0 auto;
+    }
+    .pickBanner b{
+      font-weight: 950;
+      letter-spacing: -0.01em;
+      font-size: 13px;
+      color: rgba(15,23,42,.92);
+    }
+    .pickBanner span{
+      font-size: 12px;
+      color: rgba(15,23,42,.62);
+    }
+    #seasonButtons.attention .btn,
+    #needButtons.attention .btn{
+      animation: setupPulse 1.15s ease-in-out infinite;
+      border-color: rgba(79,70,229,.28);
+      box-shadow: 0 10px 24px rgba(15, 23, 42, .06), 0 0 0 0 rgba(79,70,229,.22);
+    }
+    #seasonButtons.attention .btn:nth-child(2),
+    #needButtons.attention .btn:nth-child(2){ animation-delay: .05s; }
+    #seasonButtons.attention .btn:nth-child(3),
+    #needButtons.attention .btn:nth-child(3){ animation-delay: .10s; }
+    #seasonButtons.attention .btn:nth-child(4),
+    #needButtons.attention .btn:nth-child(4){ animation-delay: .15s; }
+    @keyframes setupPulse{
+      0%   { transform: translateY(0); box-shadow: 0 10px 24px rgba(15, 23, 42, .06), 0 0 0 0 rgba(79,70,229,.22); }
+      50%  { transform: translateY(-1px); box-shadow: 0 14px 30px rgba(15, 23, 42, .08), 0 0 0 6px rgba(79,70,229,.12); }
+      100% { transform: translateY(0); box-shadow: 0 10px 24px rgba(15, 23, 42, .06), 0 0 0 0 rgba(79,70,229,.22); }
+    }
     .mainTopBar{
       display:flex;
       justify-content:flex-end;
@@ -602,27 +662,37 @@
   <div class="shell">
     <section class="hero">
       <h1>이 바지에 뭐입지?</h1>
-      <div class="sub">첫 화면에서 옵션을 고르고 다음으로 넘어가세요. <span style="opacity:.7; font-size:12px;">버전: 5-ui-2page</span></div>
+      <div class="sub">옵션을 고르면 자동으로 다음 화면으로 넘어갑니다. <span style="opacity:.7; font-size:12px;">버전: 6-ui-guided</span></div>
     </section>
 
     <section class="panel page show" id="pageSetup" aria-label="첫 페이지: 옵션 선택">
       <div class="panelHead">
-        <div class="panelTitle">1) 원하는 옵션을 선택하세요</div>
+        <div class="panelTitle">옵션 선택</div>
         <div class="meta">
-          <span class="pill" id="pillSeason">시즌: 아직</span>
-          <span class="pill" id="pillNeed">기능: 아직</span>
+          <span class="pill" id="pillSeason">1) 계절: 아직</span>
+          <span class="pill" id="pillNeed">2) 기능: 아직</span>
+        </div>
+      </div>
+
+      <div class="pickBanner show" id="bannerSeason" role="note" aria-live="polite">
+        <div class="left">
+          <span class="dot" aria-hidden="true"></span>
+          <div style="display:grid; gap:2px;">
+            <b>먼저 계절을 선택하세요</b>
+            <span>봄 / 여름 / 가을 / 겨울 중 하나를 고르세요.</span>
+          </div>
         </div>
       </div>
 
       <div class="setupGrid">
-        <div class="setupSection">
+        <div class="setupSection" id="secSeason">
           <div class="h">
             <b>1. 언제 입으실건가요?</b>
             <span>버튼에 마우스를 올리면 설명이 표시됩니다.</span>
           </div>
 
           <div class="choiceRow">
-            <div class="btnGrid4" id="seasonButtons">
+            <div class="btnGrid4 attention" id="seasonButtons">
               <button class="btn" type="button" data-season="봄">봄</button>
               <button class="btn" type="button" data-season="여름">여름</button>
               <button class="btn" type="button" data-season="가을">가을</button>
@@ -635,7 +705,17 @@
           </div>
         </div>
 
-        <div class="setupSection">
+        <div class="pickBanner" id="bannerNeed" role="note" aria-live="polite">
+          <div class="left">
+            <span class="dot" aria-hidden="true"></span>
+            <div style="display:grid; gap:2px;">
+              <b>다음으로 필요한 기능을 선택하세요</b>
+              <span>2개 중 하나를 고르면 자동으로 넘어갑니다.</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="setupSection" id="secNeed">
           <div class="h">
             <b>2. 무엇이 필요한가요?</b>
             <span>버튼에 마우스를 올리면 설명이 표시됩니다.</span>
@@ -645,8 +725,6 @@
             <div class="btnGrid2" id="needButtons">
               <button class="btn" type="button" data-need="pantsToTop">하의에 맞는 상의 (기본)</button>
               <button class="btn" type="button" data-need="topToPants">상의에 맞는 하의</button>
-              <button class="btn" type="button" data-need="outerToIn" disabled>아우터에 맞는 상/하의 (현재 준비중)</button>
-              <button class="btn" type="button" data-need="premium" disabled>Premium : 맞춤형 (현재 준비중)</button>
             </div>
             <aside class="helpBox" aria-live="polite">
               <div class="title">상세 설명</div>
@@ -657,7 +735,6 @@
 
         <div class="setupFooter">
           <button class="btn ghost" type="button" id="btnReset">초기화</button>
-          <button class="btn primary" type="button" id="btnGo" disabled>다음으로</button>
         </div>
       </div>
     </section>
@@ -2490,7 +2567,7 @@
     const NEED_DESC = {
       pantsToTop: "- 오늘 입을 바지를 고르면 어울리는 컬러를 추천해드립니다.",
       topToPants: "- 오늘 입을 셔츠를 고르면 어울리는 컬러를 추천해드립니다.",
-      outerToIn:  "- 오늘 입을 아우터를 고르면 안에 입을 상/하의의 컬러 매치를 추천해드립니다.",
+      outerToIn:  "- 오늘 입을 아우터를 고르면 안에 입을 상/하의의 컬러 매치를 추천해드립니다. (서비스 준비중)",
       premium:    "- 현재 서비스 준비중입니다."
     };
 
@@ -2505,20 +2582,23 @@
       init(){
         this.cache();
         this.bind();
-        this.refresh();
+        this.syncGuidance();
+        this.refreshPills();
       },
 
       cache(){
         this.el = {
           pageSetup: document.getElementById("pageSetup"),
           pageMain: document.getElementById("pageMain"),
+          toast: document.getElementById("toast"),
           seasonButtons: document.getElementById("seasonButtons"),
           needButtons: document.getElementById("needButtons"),
           seasonHelp: document.getElementById("seasonHelp"),
           needHelp: document.getElementById("needHelp"),
           pillSeason: document.getElementById("pillSeason"),
           pillNeed: document.getElementById("pillNeed"),
-          btnGo: document.getElementById("btnGo"),
+          bannerSeason: document.getElementById("bannerSeason"),
+          bannerNeed: document.getElementById("bannerNeed"),
           btnReset: document.getElementById("btnReset"),
           btnBack: document.getElementById("btnBack"),
           pillFromSetup: document.getElementById("pillFromSetup")
@@ -2531,7 +2611,9 @@
           btn.addEventListener("click", ()=>{
             this.state.season = season;
             this.selectWithin(this.el.seasonButtons, btn);
-            this.refresh();
+            this.refreshPills();
+            this.showToast(`${season} 선택 ✅`);
+            this.syncGuidance();
           });
           btn.addEventListener("mouseenter", ()=>{
             this.el.seasonHelp.textContent = "-상세 설명 준비중-";
@@ -2543,12 +2625,18 @@
 
         this.el.needButtons.querySelectorAll("button").forEach(btn=>{
           const need = btn.getAttribute("data-need");
-          const isDisabled = btn.hasAttribute("disabled");
           btn.addEventListener("click", ()=>{
-            if (isDisabled) return;
+            if (!this.state.season){
+              this.showToast("먼저 계절을 선택하세요");
+              this.syncGuidance();
+              return;
+            }
             this.state.need = need;
             this.selectWithin(this.el.needButtons, btn);
-            this.refresh();
+            this.refreshPills();
+            this.showToast(`${this.labelNeed(need)} 선택 ✅`);
+            this.syncGuidance();
+            this.autoGoMainIfReady();
           });
           btn.addEventListener("mouseenter", ()=>{
             if (!need) return;
@@ -2566,29 +2654,24 @@
           this.clearSelected(this.el.needButtons);
           this.el.seasonHelp.textContent = "-상세 설명 준비중-";
           this.el.needHelp.textContent = "버튼에 마우스를 올리면 설명이 표시됩니다.";
-          this.refresh();
-        });
-
-        this.el.btnGo.addEventListener("click", async ()=>{
-          if (!this.canGo()) return;
-          if (!this.mainInitialized){
-            await App.init();
-            this.mainInitialized = true;
-          }
-          this.el.pillFromSetup.textContent = `선택 반영: ${this.state.season} / ${this.labelNeed(this.state.need)}`;
-          this.showPage("main");
+          this.showPage("setup");
+          this.syncGuidance();
+          this.refreshPills();
+          this.showToast("초기화 완료");
         });
 
         this.el.btnBack.addEventListener("click", ()=>{
           this.showPage("setup");
+          this.syncGuidance();
+          this.showToast("옵션 선택으로 이동");
         });
       },
 
       labelNeed(need){
         if (need === "pantsToTop") return "하의→상의(기본)";
         if (need === "topToPants") return "상의→하의";
-        if (need === "outerToIn") return "아우터→상/하(준비중)";
-        if (need === "premium") return "프리미엄(준비중)";
+        if (need === "outerToIn") return "아우터→상/하(서비스 준비중)";
+        if (need === "premium") return "프리미엄(서비스 준비중)";
         return "아직";
       },
 
@@ -2607,10 +2690,43 @@
         return !!(this.state.season && this.state.need);
       },
 
-      refresh(){
-        this.el.pillSeason.textContent = "시즌: " + (this.state.season || "아직");
-        this.el.pillNeed.textContent = "기능: " + this.labelNeed(this.state.need);
-        this.el.btnGo.disabled = !this.canGo();
+      refreshPills(){
+        this.el.pillSeason.textContent = "1) 계절: " + (this.state.season || "아직");
+        this.el.pillNeed.textContent = "2) 기능: " + (this.state.need ? this.labelNeed(this.state.need) : "아직");
+      },
+
+      syncGuidance(){
+        if (!this.state.season){
+          this.el.bannerSeason.classList.add("show");
+          this.el.bannerNeed.classList.remove("show");
+          this.el.seasonButtons.classList.add("attention");
+          this.el.needButtons.classList.remove("attention");
+          return;
+        }
+
+        if (this.state.season && !this.state.need){
+          this.el.bannerSeason.classList.remove("show");
+          this.el.bannerNeed.classList.add("show");
+          this.el.seasonButtons.classList.remove("attention");
+          this.el.needButtons.classList.add("attention");
+          return;
+        }
+
+        this.el.bannerSeason.classList.remove("show");
+        this.el.bannerNeed.classList.remove("show");
+        this.el.seasonButtons.classList.remove("attention");
+        this.el.needButtons.classList.remove("attention");
+      },
+
+      async autoGoMainIfReady(){
+        if (!this.canGo()) return;
+        if (!this.mainInitialized){
+          await App.init();
+          this.mainInitialized = true;
+        }
+        this.el.pillFromSetup.textContent = `선택 반영: ${this.state.season} / ${this.labelNeed(this.state.need)}`;
+        this.showPage("main");
+        this.showToast("추천 화면으로 이동");
       },
 
       showPage(which){
@@ -2621,6 +2737,14 @@
           this.el.pageSetup.classList.remove("show");
           this.el.pageMain.classList.add("show");
         }
+      },
+
+      showToast(msg){
+        if (!this.el.toast) return;
+        this.el.toast.textContent = msg;
+        this.el.toast.classList.add("show");
+        clearTimeout(this._t);
+        this._t = setTimeout(()=> this.el.toast.classList.remove("show"), 1200);
       }
     };
 
