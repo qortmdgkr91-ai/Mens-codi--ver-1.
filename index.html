@@ -680,6 +680,7 @@
       "핑크":   { hex:"#D08AAA" },
       "네이비": { hex:"#1D2B5B" },
       "흰색":   { hex:"#F3F4F6" },
+      "그레이": { hex:"#9CA3AF" },
       "진청":   { hex:"#1F3B6F" },
       "흑청":   { hex:"#16233A" },
       "연청":   { hex:"#82A9D6" },
@@ -1069,6 +1070,14 @@
     // =========================================================
     // 유틸
     // =========================================================
+    function colorHexSafe(name, fallback){
+      const c = COLORS && COLORS[name];
+      return (c && c.hex) ? c.hex : (fallback || "#9CA3AF");
+    }
+    function hasColor(name){
+      return !!(COLORS && COLORS[name] && COLORS[name].hex);
+    }
+
     function validateRules(){
       const missing = [];
       Object.entries(RULES).forEach(([pants, rule]) => {
@@ -1169,6 +1178,84 @@
         if (c.pants === pantsName && c.shirt === shirtName) return c.weight || 1;
       }
       return 0;
+    }
+
+    function clamp(n,a,b){ return Math.max(a, Math.min(b,n)); }
+
+    function scoreShirtForPants(pantsName, shirtName, ctx){
+      // ctx: { topType, bottomFit }
+      let s = 0;
+
+      // 그룹 선호(기존 로직 재사용)
+      s += (shirtBaseScore(shirtName, pantsName) || 0) * 2;
+
+      // 명시 Good 케이스 가점
+      s += (caseWeight(pantsName, shirtName) || 0) * 3;
+
+      // 명시 Bad 케이스 감점
+      s -= (badWeight(pantsName, shirtName) || 0) * 5;
+
+      // 명도 대비(안전 조합)
+      const pHex = colorHexSafe(pantsName);
+      const tHex = colorHexSafe(shirtName);
+      const pDark = isDark(pHex);
+      const tDark = isDark(tHex);
+      if (pDark !== tDark) s += 3; else s -= 1;
+      if (pDark && tDark) s -= 2;
+
+      // 상의 종류별 부스트/페널티
+      if (ctx && ctx.topType){
+        if (ctx.topType === "셔츠"){
+          if (shirtName === "흰색" || shirtName === "파란색") s += 2;
+        } else if (ctx.topType === "후드" || ctx.topType === "맨투맨"){
+          if (shirtName === "차콜" || shirtName === "베이지") s += 2;
+          if (shirtName === "노란색" || shirtName === "핑크") s -= 1;
+        } else if (ctx.topType === "니트"){
+          if (shirtName === "흰색" || shirtName === "베이지" || shirtName === "아이보리" || shirtName === "크림") s += 2;
+          if (shirtName === "노란색" || shirtName === "핑크" || shirtName === "녹색") s -= 1;
+        }
+      }
+
+      // 핏 옵션(보수적)
+      if (ctx && ctx.bottomFit === "와이드" && pDark && tDark) s -= 1;
+
+      return s;
+    }
+
+    function gradeFromScore(score){
+      if (score >= 8) return "강추";
+      if (score >= 4) return "괜찮음";
+      if (score >= 1) return "그닥";
+      return "비추";
+    }
+
+    function generateRecommendations(pantsName, ctx){
+      const all = Object.keys(COLORS).filter(hasColor);
+
+      const scored = all.map(shirtName => {
+        const score = scoreShirtForPants(pantsName, shirtName, ctx);
+        const grade = gradeFromScore(score);
+        return { color: shirtName, score, grade };
+      }).sort((a,b)=> b.score - a.score);
+
+      const goodPool = scored.filter(x => x.grade === "강추" || x.grade === "괜찮음");
+      const good = goodPool.slice(0, 2).map(x => ({ color:x.color, grade:x.grade }));
+
+      const badPool = scored.slice().reverse().filter(x => x.grade === "비추" || x.grade === "그닥");
+      const bad = badPool.slice(0, 2).map(x => ({ color:x.color, grade:x.grade }));
+
+      const used = new Set([...good.map(x=>x.color), ...bad.map(x=>x.color)]);
+      const mehPool = scored.filter(x => !used.has(x.color) && (x.grade === "그닥" || x.grade === "괜찮음"));
+      const meh = mehPool.slice(0, 2).map(x => ({ color:x.color, grade:x.grade }));
+
+      // good이 부족하면 상위권에서 보충(grade는 괜찮음으로 강제)
+      if (good.length < 2){
+        const extra = scored.filter(x=>!used.has(x.color)).slice(0, 2-good.length)
+          .map(x=>({ color:x.color, grade:"괜찮음" }));
+        good.push(...extra);
+      }
+
+      return { good, bad, meh };
     }
 
     // =========================================================
@@ -1509,6 +1596,7 @@
       },
 
       el: {},
+      tmp: { c1:null, c2:null, ctx1:null, ctx2:null, w:0, h:0 },
 
       async init(){
         this.cacheEls();
@@ -1691,6 +1779,23 @@
         if (this.assetsReady) this.renderOutfit();
       },
 
+      ensureTmpCanvases(w,h){
+        if (!this.tmp) this.tmp = { c1:null,c2:null,ctx1:null,ctx2:null,w:0,h:0 };
+        if (!this.tmp.c1 || !this.tmp.c2){
+          this.tmp.c1 = document.createElement("canvas");
+          this.tmp.c2 = document.createElement("canvas");
+          this.tmp.ctx1 = this.tmp.c1.getContext("2d");
+          this.tmp.ctx2 = this.tmp.c2.getContext("2d");
+        }
+        const W = Math.max(1, Math.floor(w));
+        const H = Math.max(1, Math.floor(h));
+        if (this.tmp.w !== W || this.tmp.h !== H){
+          this.tmp.w = W; this.tmp.h = H;
+          this.tmp.c1.width = W; this.tmp.c1.height = H;
+          this.tmp.c2.width = W; this.tmp.c2.height = H;
+        }
+      },
+
       renderOutfit(){
         const canvas = this.el.outfitCanvas;
         if (!canvas || !this.assetsReady) return;
@@ -1699,6 +1804,7 @@
         const dpr = window.devicePixelRatio || 1;
         const w = this.canvasCssW || (canvas.width / dpr);
         const h = this.canvasCssH || (canvas.height / dpr);
+        this.ensureTmpCanvases(w, h);
 
         ctx.clearRect(0, 0, w, h);
 
@@ -1807,12 +1913,11 @@
 
         // 6) draw helper는 기존 로직 유지
         const drawTinted = (maskImg, shadeImg, colorHex, fit, shadeAsMask) => {
-          const tmp = document.createElement("canvas");
-          tmp.width = Math.max(1, Math.floor(w));
-          tmp.height = Math.max(1, Math.floor(h));
-          const t = tmp.getContext("2d");
+          const tmp = this.tmp.c2;
+          const t = this.tmp.ctx2;
 
           t.clearRect(0, 0, w, h);
+          t.globalAlpha = 1;
           t.globalCompositeOperation = "source-over";
           t.drawImage(maskImg, fit.x, fit.y, fit.w, fit.h);
 
@@ -1837,12 +1942,11 @@
         };
 
         const drawUnderlay = (maskImg, fit, color) => {
-          const tmp = document.createElement("canvas");
-          tmp.width = Math.max(1, Math.floor(w));
-          tmp.height = Math.max(1, Math.floor(h));
-          const t = tmp.getContext("2d");
+          const tmp = this.tmp.c1;
+          const t = this.tmp.ctx1;
 
           t.clearRect(0, 0, w, h);
+          t.globalAlpha = 1;
           t.globalCompositeOperation = "source-over";
           t.drawImage(maskImg, fit.x, fit.y, fit.w, fit.h);
           t.globalCompositeOperation = "source-in";
@@ -1888,7 +1992,7 @@
           b.className = "btn";
           b.type = "button";
           b.setAttribute("data-color", name);
-          b.innerHTML = `<span>${name}</span><span class="swatch" style="background:${COLORS[name].hex}"></span>`;
+          b.innerHTML = `<span>${name}</span><span class="swatch" style="background:${colorHexSafe(name)}"></span>`;
           b.addEventListener("click", ()=> this.selectPants(name));
           this.el.pantsButtons.appendChild(b);
         });
@@ -1932,63 +2036,13 @@
         });
       },
 
-      sortByWeight(list, pantsName, weightFn, priorityColors, baseScoreFn){
-        const items = list ? list.slice() : [];
-        if (!items.length) return [];
-        const pri = priorityColors || [];
-        return items
-          .map((item, idx)=> ({ item, idx }))
-          .sort((a, b)=>{
-            const wa = weightFn(pantsName, a.item.color);
-            const wb = weightFn(pantsName, b.item.color);
-            const sa = baseScoreFn ? baseScoreFn(a.item.color, pantsName) : 0;
-            const sb = baseScoreFn ? baseScoreFn(b.item.color, pantsName) : 0;
-            const scoreA = (wa * 10) + sa;
-            const scoreB = (wb * 10) + sb;
-            if (scoreB !== scoreA) return scoreB - scoreA;
-            if (pri.length){
-              const pa = pri.indexOf(a.item.color);
-              const pb = pri.indexOf(b.item.color);
-              const aPri = pa === -1 ? 999 : pa;
-              const bPri = pb === -1 ? 999 : pb;
-              if (aPri !== bPri) return aPri - bPri;
-            }
-            return a.idx - b.idx;
-          })
-          .map(x => x.item);
-      },
-
-      adjustListsForSelections(rule){
-        const pantsName = this.state.selectedPants;
-        let boostColors = null;
-        if (this.state.selectedTopType === "셔츠") boostColors = ["흰색","파란색"];
-        else if (this.state.selectedTopType === "후드" || this.state.selectedTopType === "맨투맨") boostColors = ["차콜","베이지"];
-        else if (this.state.selectedTopType === "니트") boostColors = ["흰색","베이지"];
-
-        const good = this.sortByWeight(rule.good || [], pantsName, caseWeight, boostColors, shirtBaseScore);
-        const meh = this.sortByWeight(rule.meh || [], pantsName, caseWeight, boostColors, shirtBaseScore);
-        const bad = this.sortByWeight(rule.bad || [], pantsName, badWeight, null);
-
-        return { good, bad, meh };
-      },
-
       refreshRecommendations(){
         if (!this.state.selectedPants) return;
-        const r = RULES[this.state.selectedPants];
-        const adjusted = this.adjustListsForSelections(r);
-        const goodList = adjusted.good ? adjusted.good.slice() : [];
-        if (goodList.length < 4){
-          const extras = (adjusted.meh || []).filter(it => !goodList.some(g => g.color === it.color));
-          while (goodList.length < 4 && extras.length){
-            goodList.push(extras.shift());
-          }
-        }
-        this.renderChips(this.el.goodChips, goodList, 4);
-        let badList = (adjusted.bad && adjusted.bad.length) ? adjusted.bad.slice() : [];
-        if (!badList.length && adjusted.meh && adjusted.meh.length) badList = adjusted.meh.slice(0,2);
-        badList = this.sortByWeight(badList, this.state.selectedPants, badWeight, null);
-        this.renderChips(this.el.badChips, badList, 2);
-        this.renderChips(this.el.mehChips, adjusted.meh || [], 2);
+        const ctx = { topType: this.state.selectedTopType, bottomFit: this.state.selectedBottomFit };
+        const rec = generateRecommendations(this.state.selectedPants, ctx);
+        this.renderChips(this.el.goodChips, rec.good, 2);
+        this.renderChips(this.el.badChips,  rec.bad,  2);
+        this.renderChips(this.el.mehChips,  rec.meh,  2);
       },
 
       renderStatusCallout(grade, colorName){
@@ -1998,7 +2052,7 @@
         const bw = badWeight(this.state.selectedPants, colorName);
         const caseKey = findEduKeyFromCases(this.state.selectedPants, colorName);
         let eduKey;
-        if (bw > 0) eduKey = "avoid";
+        if ((grade === "비추" || grade === "그닥") && bw > 0) eduKey = "avoid";
         else if (caseKey) eduKey = caseKey;
         else eduKey = getEduKey(this.state.selectedPants, colorName, grade);
         const eduLine = EDU_TEXT[eduKey] || EDU_TEXT.contrast;
@@ -2037,6 +2091,15 @@
           this.renderStatusCallout(this.state.selectedGrade, this.state.selectedShirt);
           return;
         }
+        if (this.state.selectedPants && this.state.selectedShirt && !this.state.selectedGrade){
+          const pantsLabel = this.formatWithOption(this.state.selectedPants, this.state.selectedBottomFit);
+          const shirtLabel = this.formatWithOption(this.state.selectedShirt, this.state.selectedTopType);
+          const styleLine = getStyleLine(this.state.selectedTopType);
+          const styleHtml = styleLine ? `<div style="margin-top:6px; color: rgba(15,23,42,.70); font-size:12px; line-height:1.4;">스타일: ${styleLine}</div>` : "";
+          this.el.statusCallout.innerHTML =
+            `현재 <b>${pantsLabel}</b> + <b>${shirtLabel}</b> 적용 중입니다.<br/>오른쪽 추천/비추/그닥 칩을 다시 <b>클릭</b>해서 멘트를 갱신하세요.` + styleHtml;
+          return;
+        }
         if (this.state.selectedPants){
           const styleLine = getStyleLine(this.state.selectedTopType);
           const styleHtml = styleLine
@@ -2059,7 +2122,8 @@
 
         const max = typeof limit === "number" ? limit : 2;
         items.slice(0, max).forEach(it=>{
-          const hex = COLORS[it.color].hex;
+          if (!hasColor(it.color)) return;
+          const hex = colorHexSafe(it.color);
           const s = chipStyle(hex);
 
           const c = document.createElement("div");
@@ -2096,7 +2160,7 @@
       selectPants(name){
         this.state.selectedPants = name;
         this.el.statePill.textContent = "하의 선택: " + name;
-        this.state.pantsColor = COLORS[name].hex;
+        this.state.pantsColor = colorHexSafe(name, this.state.pantsColor);
         this.renderIfReady();
         const btns = this.el.pantsButtons.querySelectorAll("button");
         btns.forEach(btn => {
@@ -2120,6 +2184,7 @@
         this.renderIfReady();
         this.showToast(`${name} 선택 ✅`);
         this.refreshRecommendations();
+        this.state.selectedGrade = null;
         this.updateStatusCallout();
       },
 
@@ -2130,6 +2195,7 @@
         this.renderIfReady();
         this.showToast(`${name} 선택 ✅`);
         this.refreshRecommendations();
+        this.state.selectedGrade = null;
         this.updateStatusCallout();
       },
 
@@ -2140,7 +2206,7 @@
       applyShirt(colorName, grade){
         this.state.selectedShirt = colorName;
         this.state.selectedGrade = grade;
-        this.state.topColor = COLORS[colorName].hex;
+        this.state.topColor = colorHexSafe(colorName, this.state.topColor);
         this.renderIfReady();
         this.el.shirtPill.textContent = "상의 선택: " + colorName;
         this.renderStatusCallout(grade, colorName);
