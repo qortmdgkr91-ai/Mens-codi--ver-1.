@@ -4,57 +4,687 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>오늘 뭐 입지?</title>
-
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pretendard@latest/dist/web/static/pretendard.css">
 
   <style>
     :root{
-      --bgTop: #fbfbfd;
-      --bgMid: #f6f7fb;
-      --bgBot: #f2f4fb;
+      --bg:#f6f7fb;
+      --surface: rgba(255,255,255,.92);
+      --surface2: rgba(255,255,255,.98);
+      --stroke: rgba(15, 23, 42, .10);
+      --stroke2: rgba(15, 23, 42, .16);
 
       --text: rgba(15, 23, 42, .92);
-      --muted: rgba(15, 23, 42, .60);
+      --muted: rgba(15, 23, 42, .62);
 
-      --line: rgba(15, 23, 42, .10);
-      --line2: rgba(15, 23, 42, .16);
+      --shadow: 0 10px 30px rgba(15, 23, 42, .08);
+      --shadow2: 0 8px 18px rgba(15, 23, 42, .06);
+      --radius: 18px;
 
       --accent: #4f46e5;
-      --accent2: #2563eb;
-      --accentLine: rgba(79,70,229,.26);
-      --accentSoft: rgba(79,70,229,.08);
-
-      --shadowSm: 0 10px 26px rgba(15, 23, 42, .08);
-      --radius: 16px;
+      --accent2:#2563eb;
+      --warnBorder: rgba(79,70,229,.22);
     }
 
     *{ box-sizing:border-box; }
-    html, body{ height:100%; }
 
     body{
       margin:0;
+      min-height:100vh;
       font-family: Pretendard, system-ui, -apple-system, "Noto Sans KR", "Segoe UI", Roboto, sans-serif;
       color:var(--text);
-      letter-spacing: -0.01em;
       background:
-        radial-gradient(900px 520px at 20% -10%, rgba(79,70,229,.10), transparent 62%),
-        radial-gradient(900px 520px at 88% 4%, rgba(37,99,235,.08), transparent 64%),
-        linear-gradient(180deg, var(--bgTop) 0%, var(--bgMid) 52%, var(--bgBot) 100%);
+        radial-gradient(900px 520px at 15% -10%, rgba(79,70,229,.12), transparent 60%),
+        radial-gradient(900px 520px at 85% 0%, rgba(37,99,235,.10), transparent 60%),
+        linear-gradient(180deg, #f7f8fc 0%, #f4f6ff 45%, var(--bg) 100%);
       padding: 26px 18px 40px;
+      letter-spacing: -0.01em;
+    }
+
+    /* fireworks canvas */
+    #fxCanvas{
+      position:fixed;
+      inset:0;
+      width:100vw;
+      height:100vh;
+      pointer-events:none;
+      z-index:9999;
     }
 
     .shell{
-      max-width: 1040px;
+      max-width: 1100px;
       margin: 0 auto;
       display: grid;
-      gap: 18px;
+      gap: 16px;
     }
 
-    /* TOP HEADER (NO BOX) */
-    .topHeader{
+    .hero{
+      padding: 18px 18px 16px;
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, var(--surface2), var(--surface));
+      border: 1px solid var(--stroke);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+
+    .heroInner{
       display:grid;
       gap: 8px;
       text-align:center;
+      padding: 6px 4px 2px;
+    }
+    .overline{
+      font-size: 12px;
+      color: var(--muted);
+      letter-spacing: 0.02em;
+      font-weight: 700;
+    }
+    .hero h1{
+      margin:0;
+      text-align:center;
+      font-size: 34px;
+      line-height: 1.06;
+      letter-spacing: -0.04em;
+      font-weight: 900;
+    }
+    .subline{
+      font-size: 12px;
+      color: rgba(15,23,42,.55);
+      letter-spacing: 0.01em;
+      font-weight: 700;
+    }
+    .heroMeta{
+      margin-top: 10px;
+      display:flex;
+      justify-content:center;
+      gap: 8px;
+      flex-wrap:wrap;
+    }
+    .hero .sub{
+      text-align:center;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1.15fr .85fr;
+      gap: 14px;
+      align-items:start;
+    }
+    @media (max-width: 960px){
+      .grid{ grid-template-columns: 1fr; }
+    }
+
+    .panel{
+      padding: 16px;
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, var(--surface2), var(--surface));
+      border: 1px solid var(--stroke);
+      box-shadow: var(--shadow);
+    }
+
+    .panelHead{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+      flex-wrap:wrap;
+    }
+    .panelTitle{
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      font-size: 14px;
+    }
+    .meta{
+      display:flex;
+      gap: 8px;
+      flex-wrap:wrap;
+      color: var(--muted);
+      font-size: 12px;
+      align-items:center;
+    }
+    .pill{
+      font-size: 12px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, .04);
+      border: 1px solid var(--stroke);
+      color: rgba(15, 23, 42, .78);
+      font-weight: 700;
+    }
+
+    /* LEFT */
+    .outfitWrap{ display:grid; gap: 14px; }
+
+    .outfitCard{
+      padding: 14px;
+      border-radius: 16px;
+      background: linear-gradient(180deg, var(--surface2), var(--surface));
+      border: 1px solid var(--stroke);
+      box-shadow: var(--shadow2);
+      overflow:hidden;
+    }
+    .outfitTopRow{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+      flex-wrap:wrap;
+      margin-bottom: 10px;
+    }
+    .hint{
+      color: rgba(15, 23, 42, .70);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .outfitGrid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      align-items:center;
+    }
+    @media (max-width: 520px){
+      .outfitGrid{ grid-template-columns: 1fr; }
+    }
+
+    .figure{
+      border-radius: 16px;
+      background: rgba(15, 23, 42, .03);
+      border: 1px solid var(--stroke);
+      padding: 12px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .legend{
+      border-radius: 16px;
+      background: rgba(15, 23, 42, .02);
+      border: 1px solid var(--stroke);
+      padding: 12px;
+      display:grid;
+      gap: 12px;
+    }
+
+    .legendItem{ display:grid; gap: 6px; }
+    .legendTop{ display:flex; align-items:center; gap: 10px; flex-wrap:wrap; }
+
+    .badgeIcon{
+      display:inline-flex;
+      align-items:center;
+      gap: 8px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.70);
+      border: 1px solid var(--stroke);
+      font-size: 12px;
+      color: rgba(15, 23, 42, .90);
+      box-shadow: 0 8px 18px rgba(15, 23, 42, .06);
+    }
+    .badgeIcon b{ font-weight: 950; }
+
+    .legendMsg{
+      color: rgba(15, 23, 42, .70);
+      font-size: 12px;
+      line-height: 1.45;
+      padding-left: 6px;
+    }
+
+    .iconImg{
+      width: 16px;
+      height: 16px;
+      display:inline-block;
+      vertical-align:-3px;
+    }
+
+    /* RIGHT */
+    .choices{ display:grid; gap: 12px; }
+    .selectRow{ display:grid; gap: 10px; }
+
+    .pantsButtons{
+      display:grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 8px;
+    }
+    @media (max-width: 520px){
+      .pantsButtons{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    .btn{
+      border:1px solid var(--stroke);
+      cursor:pointer;
+      border-radius: 14px;
+      padding: 12px 12px;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      color: rgba(15, 23, 42, .92);
+      background: rgba(255,255,255,.96);
+      box-shadow: var(--shadow2);
+      transition: transform .12s ease, border-color .12s ease, box-shadow .12s ease, background .12s ease;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+      position: relative;
+      user-select:none;
+      text-align:center;
+    }
+    .btn:hover{
+      border-color: var(--stroke2);
+      box-shadow: 0 10px 22px rgba(15,23,42,.08);
+      transform: translateY(-1px);
+    }
+    .btn:active{ transform: translateY(1px) scale(.99); }
+    .btn.primary{
+      color: rgba(255,255,255,.96);
+      background: linear-gradient(135deg, rgba(79,70,229,.98), rgba(37,99,235,.92));
+      border: 1px solid rgba(255,255,255,.22);
+      box-shadow: 0 16px 34px rgba(37,99,235,.18);
+    }
+    .btn.ghost{
+      background: rgba(255,255,255,.70);
+    }
+    .btn[disabled]{
+      cursor:not-allowed;
+      opacity:.55;
+      filter:saturate(.6);
+      box-shadow:none;
+    }
+    .btn[disabled]:hover{
+      transform:none;
+      box-shadow:none;
+      border-color: var(--stroke);
+      background: rgba(255,255,255,.96);
+    }
+    .btn.cta{
+      justify-content:center;
+      color: rgba(255,255,255,.96);
+      background: linear-gradient(135deg, rgba(79,70,229,.98), rgba(37,99,235,.92));
+      border-color: rgba(255,255,255,.18);
+      box-shadow: 0 14px 30px rgba(37,99,235,.16);
+    }
+    .btn.cta:hover{
+      transform: translateY(-1px);
+      box-shadow: 0 18px 44px rgba(37,99,235,.20);
+    }
+
+    .page{ display:none; }
+    .page.show{ display:block; }
+
+    .setupGrid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+      align-items:start;
+    }
+    .setupSection{
+      display:grid;
+      gap: 10px;
+    }
+    .setupSection .h{
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap: 10px;
+      flex-wrap:wrap;
+    }
+    .setupSection .h b{
+      font-weight: 950;
+      font-size: 14px;
+      letter-spacing:-0.01em;
+    }
+    .setupSection .h span{
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .choiceRow{
+      display:grid;
+      grid-template-columns: 1fr 320px;
+      gap: 12px;
+      align-items:stretch;
+    }
+    @media (max-width: 960px){
+      .choiceRow{ grid-template-columns: 1fr; }
+    }
+    .btnGrid4{
+      display:grid;
+      grid-template-columns: repeat(4, minmax(0,1fr));
+      gap: 10px;
+    }
+    @media (max-width: 700px){
+      .btnGrid4{ grid-template-columns: repeat(2, minmax(0,1fr)); }
+    }
+    .btnGrid2{
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap: 10px;
+    }
+    @media (max-width: 700px){
+      .btnGrid2{ grid-template-columns: 1fr; }
+    }
+    .helpBox{
+      border-radius: 18px;
+      padding: 12px;
+      background: rgba(15, 23, 42, .03);
+      border: 1px solid var(--stroke);
+      display:grid;
+      gap: 8px;
+      min-height: 92px;
+    }
+    .helpBox .title{
+      font-weight: 950;
+      font-size: 12px;
+      color: rgba(15,23,42,.78);
+      letter-spacing:-0.01em;
+    }
+    .helpBox .desc{
+      font-size: 12px;
+      color: rgba(15,23,42,.70);
+      line-height: 1.45;
+      white-space: pre-line;
+    }
+    .setupFooter{
+      display:flex;
+      gap: 10px;
+      justify-content:flex-end;
+      flex-wrap:wrap;
+      margin-top: 6px;
+    }
+    #pageSetup .btn{ justify-content:center; }
+    #seasonButtons .btn.selected,
+    #needButtonsActive .btn.selected{
+      color: rgba(255,255,255,.96);
+      background: linear-gradient(135deg, rgba(79,70,229,.98), rgba(37,99,235,.92));
+      border: 1px solid rgba(255,255,255,.22);
+      box-shadow: 0 16px 34px rgba(37,99,235,.18);
+    }
+    .pickBanner{
+      display:none;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 16px;
+      background: linear-gradient(180deg, rgba(79,70,229,.12), rgba(79,70,229,.07));
+      border: 1px solid rgba(79,70,229,.28);
+      box-shadow: 0 12px 26px rgba(15, 23, 42, .08);
+      margin-bottom: 10px;
+    }
+    .pickBanner.show{ display:flex; }
+    .pickBanner .left{
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      flex-wrap:wrap;
+    }
+    .pickBanner .dot{
+      width: 10px; height: 10px;
+      border-radius: 999px;
+      background: var(--accent);
+      box-shadow: 0 0 0 6px rgba(79,70,229,.12);
+      flex: 0 0 auto;
+    }
+    .pickBanner b{
+      font-weight: 950;
+      letter-spacing: -0.01em;
+      font-size: 13px;
+      color: rgba(15,23,42,.92);
+    }
+    .pickBanner span{
+      font-size: 12px;
+      color: rgba(15,23,42,.62);
+    }
+    #seasonButtons.attention .btn,
+    #needButtonsActive.attention .btn{
+      animation: setupPulse 1.15s ease-in-out infinite;
+      border-color: rgba(79,70,229,.28);
+      box-shadow: 0 10px 24px rgba(15, 23, 42, .06), 0 0 0 0 rgba(79,70,229,.22);
+    }
+    #seasonButtons.attention .btn:nth-child(2),
+    #needButtonsActive.attention .btn:nth-child(2){ animation-delay: .05s; }
+    #seasonButtons.attention .btn:nth-child(3),
+    #needButtonsActive.attention .btn:nth-child(3){ animation-delay: .10s; }
+    #seasonButtons.attention .btn:nth-child(4),
+    #needButtonsActive.attention .btn:nth-child(4){ animation-delay: .15s; }
+    @keyframes setupPulse{
+      0%   { transform: translateY(0); box-shadow: 0 10px 24px rgba(15, 23, 42, .06), 0 0 0 0 rgba(79,70,229,.22); }
+      50%  { transform: translateY(-1px); box-shadow: 0 14px 30px rgba(15, 23, 42, .08), 0 0 0 6px rgba(79,70,229,.12); }
+      100% { transform: translateY(0); box-shadow: 0 10px 24px rgba(15, 23, 42, .06), 0 0 0 0 rgba(79,70,229,.22); }
+    }
+    .segButtons{
+      display:grid;
+      grid-template-columns: repeat(4, minmax(0,1fr));
+      gap: 8px;
+    }
+    @media (max-width: 520px){
+      .segButtons{ grid-template-columns: repeat(2, minmax(0,1fr)); }
+    }
+    .segButtons .btn{ justify-content:center; }
+    .segButtons .btn.selected{
+      border-color: rgba(79,70,229,.45);
+      box-shadow: 0 12px 26px rgba(79,70,229,.12);
+    }
+    #bottomFitButtons{ grid-template-columns: repeat(3, minmax(0,1fr)); }
+    @media (max-width: 520px){
+      #bottomFitButtons{ grid-template-columns: repeat(3, minmax(0,1fr)); }
+    }
+
+    .btn:focus-visible,
+    .chip:focus-visible{
+      outline: 3px solid rgba(59,130,246,.55);
+      outline-offset: 2px;
+    }
+
+    .swatch{
+      width: 14px;
+      height: 14px;
+      border-radius: 4px;
+      border: 1px solid rgba(15, 23, 42, .16);
+      box-shadow: 0 10px 18px rgba(15, 23, 42, .08);
+      flex: 0 0 auto;
+    }
+
+    /* ✅ 시작 시 "하의 먼저" 강조 */
+    .pantsPickBanner{
+      display:none;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 16px;
+      background: linear-gradient(180deg, rgba(79,70,229,.10), rgba(79,70,229,.06));
+      border: 1px solid var(--warnBorder);
+      box-shadow: 0 12px 26px rgba(15, 23, 42, .08);
+    }
+    .pantsPickBanner.show{ display:flex; }
+    .pantsPickBanner .left{
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      flex-wrap:wrap;
+    }
+    .pantsPickBanner .dot{
+      width: 10px; height: 10px;
+      border-radius: 999px;
+      background: var(--accent);
+      box-shadow: 0 0 0 6px rgba(79,70,229,.12);
+    }
+    .pantsPickBanner b{
+      font-weight: 950;
+      letter-spacing: -0.01em;
+      font-size: 13px;
+      color: rgba(15,23,42,.92);
+    }
+    .pantsPickBanner span{
+      font-size: 12px;
+      color: rgba(15,23,42,.62);
+    }
+    .pantsPickBanner button{
+      border: 0;
+      cursor: pointer;
+      border-radius: 12px;
+      padding: 8px 10px;
+      font-weight: 900;
+      background: rgba(255,255,255,.86);
+      border: 1px solid var(--warnBorder);
+      color: rgba(15,23,42,.85);
+    }
+
+    /* ✅ 하의 버튼들 "깜빡임/테두리" 유도 */
+    .pantsButtons.attention .btn{
+      animation: pantsPulse 1.15s ease-in-out infinite;
+      border-color: var(--warnBorder);
+      box-shadow: 0 10px 24px rgba(15, 23, 42, .06), 0 0 0 0 rgba(79,70,229,.22);
+    }
+    .pantsButtons.attention .btn:nth-child(2){ animation-delay: .05s; }
+    .pantsButtons.attention .btn:nth-child(3){ animation-delay: .10s; }
+    .pantsButtons.attention .btn:nth-child(4){ animation-delay: .15s; }
+    .pantsButtons.attention .btn:nth-child(5){ animation-delay: .20s; }
+
+    .pantsButtons .btn.selected{
+      border-color: rgba(79,70,229,.65);
+      box-shadow: 0 14px 30px rgba(79,70,229,.18);
+      background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(255,255,255,.88));
+    }
+
+    @keyframes pantsPulse{
+      0%   { transform: translateY(0); box-shadow: 0 10px 24px rgba(15, 23, 42, .06), 0 0 0 0 rgba(79,70,229,.22); }
+      50%  { transform: translateY(-1px); box-shadow: 0 14px 30px rgba(15, 23, 42, .08), 0 0 0 6px rgba(79,70,229,.12); }
+      100% { transform: translateY(0); box-shadow: 0 10px 24px rgba(15, 23, 42, .06), 0 0 0 0 rgba(79,70,229,.22); }
+    }
+
+    /* ✅ 오른쪽 패널 제목 줄도 강조(선택 전) */
+    .needsPants .panelTitle.pantsTitle{
+      color: rgba(79,70,229,.95);
+    }
+    .needsPants .panelTitle.pantsTitle::after{
+      content:"  (먼저 선택)";
+      font-size: 12px;
+      font-weight: 900;
+      color: rgba(79,70,229,.75);
+      margin-left: 6px;
+    }
+
+    .resultSection{
+      border-radius: 16px;
+      padding: 12px;
+      background: rgba(15, 23, 42, .02);
+      border: 1px solid var(--stroke);
+      display:grid;
+      gap: 10px;
+    }
+
+    .resultHead{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+      flex-wrap:wrap;
+    }
+    .resultHead strong{
+      font-size: 13px;
+      letter-spacing:-0.01em;
+    }
+    .muted{ color: var(--muted); font-size: 12px; }
+
+    .chips{
+      display:flex;
+      flex-wrap:wrap;
+      gap: 8px;
+    }
+
+    .chip{
+      cursor:pointer;
+      user-select:none;
+      border-radius: 14px;
+      padding: 9px 10px;
+      border: 1px solid rgba(15, 23, 42, .12);
+      box-shadow: 0 12px 26px rgba(15, 23, 42, .08);
+      font-weight: 900;
+      letter-spacing:-0.01em;
+      display:inline-flex;
+      align-items:center;
+      gap: 8px;
+      transition: transform .12s ease, border-color .12s ease, filter .12s ease;
+    }
+    .chip:hover{ transform: translateY(-1px); border-color: rgba(15, 23, 42, .22); }
+    .chip:active{ transform: translateY(1px) scale(.99); }
+
+    .chip .mark{
+      width: 22px;
+      height: 22px;
+      border-radius: 999px;
+      display:grid;
+      place-items:center;
+      background: rgba(255,255,255,.92);
+      border: 1px solid rgba(15, 23, 42, .12);
+    }
+    .chip .mark img{
+      width: 15px;
+      height: 15px;
+      display:block;
+    }
+
+    .callout{
+      border-radius: 16px;
+      padding: 12px;
+      background: linear-gradient(180deg, var(--surface2), var(--surface));
+      border: 1px solid var(--stroke);
+      color: rgba(15, 23, 42, .86);
+      font-size: 13px;
+      line-height: 1.5;
+      box-shadow: 0 10px 24px rgba(15, 23, 42, .06);
+    }
+
+    .errorBanner{
+      position: sticky;
+      top: 10px;
+      z-index: 9999;
+      margin: 10px auto;
+      max-width: 980px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: #fee2e2;
+      border: 2px solid #ef4444;
+      color: #7f1d1d;
+      font-weight: 900;
+      font-size: 14px;
+      display: none;
+      box-shadow: 0 12px 26px rgba(239,68,68,.18);
+    }
+
+    /* toast */
+    .toast{
+      position: fixed;
+      left: 50%;
+      bottom: 18px;
+      transform: translateX(-50%);
+      background: rgba(255,255,255,.94);
+      border: 1px solid var(--stroke);
+      color: rgba(15, 23, 42, .92);
+      padding: 10px 12px;
+      border-radius: 14px;
+      font-size: 13px;
+      display:none;
+      z-index: 10000;
+      box-shadow: var(--shadow);
+      font-weight: 800;
+    }
+    .toast.show{ display:block; animation: toast .18s ease both; }
+    @keyframes toast{
+      from{ transform: translateX(-50%) translateY(6px); opacity:0; }
+      to{ transform: translateX(-50%) translateY(0); opacity:1; }
+    }
+
+    /* Line-first layout overrides */
+    .hero{
+      background: transparent;
+      border: 0;
+      box-shadow: none;
       padding: 4px 2px 6px;
     }
     .overline{
@@ -64,21 +694,17 @@
       font-weight: 800;
       text-transform: uppercase;
     }
-    .topHeader h1{
-      margin:0;
+    .hero h1{
       font-size: 38px;
       line-height: 1.04;
       letter-spacing: -0.06em;
       font-weight: 950;
     }
     .subline{
-      font-size: 12px;
       color: rgba(15,23,42,.52);
       letter-spacing: 0.10em;
-      font-weight: 750;
       text-transform: uppercase;
     }
-
     .statusLine{
       display:flex;
       justify-content:center;
@@ -91,19 +717,24 @@
     }
     .statusLine b{ color: rgba(15,23,42,.88); font-weight: 900; }
     .dotSep{ opacity:.45; }
-
-    .page{ display:none; }
-    .page.show{ display:block; }
-
+    .panel{
+      padding: 14px 2px 4px;
+      border-top: 1px solid var(--stroke);
+      border-radius: 0;
+      background: transparent;
+      border-left: 0;
+      border-right: 0;
+      border-bottom: 0;
+      box-shadow: none;
+    }
     .section{
       padding: 14px 2px 4px;
-      border-top: 1px solid var(--line);
+      border-top: 1px solid var(--stroke);
     }
     .section:first-child{
       border-top: 0;
       padding-top: 0;
     }
-
     .sectionHead{
       display:flex;
       align-items:flex-end;
@@ -122,132 +753,29 @@
       font-size: 12px;
       font-weight: 650;
     }
-
-    .btnGrid4{
-      display:grid;
-      grid-template-columns: repeat(4, minmax(0,1fr));
-      gap: 10px;
-    }
-    @media (max-width: 700px){
-      .btnGrid4{ grid-template-columns: repeat(2, minmax(0,1fr)); }
-    }
-
-    .btnGrid2{
-      display:grid;
-      grid-template-columns: repeat(2, minmax(0,1fr));
-      gap: 10px;
-    }
-    @media (max-width: 700px){
-      .btnGrid2{ grid-template-columns: 1fr; }
-    }
-
-    .btn{
-      border: 1px solid var(--line);
-      cursor:pointer;
-      border-radius: 14px;
-      padding: 12px 12px;
-      font-weight: 900;
-      letter-spacing: -0.02em;
-      color: rgba(15, 23, 42, .92);
-      background: rgba(255,255,255,.96);
-      box-shadow: none;
-      transition: transform .12s ease, border-color .12s ease, background .12s ease, box-shadow .12s ease, opacity .12s ease;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      min-height: 46px;
-      user-select:none;
-    }
-    .btn:hover{
-      border-color: var(--line2);
-      background: rgba(255,255,255,1);
-      box-shadow: var(--shadowSm);
-      transform: translateY(-1px);
-    }
-    .btn:active{
-      transform: translateY(0px) scale(.995);
-      box-shadow: none;
-    }
-    .btn.selected{
-      color: rgba(255,255,255,.96);
-      background: linear-gradient(135deg, rgba(79,70,229,.98), rgba(37,99,235,.92));
-      border-color: rgba(255,255,255,.18);
-      box-shadow: 0 14px 30px rgba(37,99,235,.16);
-    }
-    .btn:focus-visible{
-      outline: 3px solid rgba(37,99,235,.34);
-      outline-offset: 2px;
-    }
-    .btn[disabled]{
-      cursor:not-allowed;
-      opacity:.55;
-      transform:none !important;
-      box-shadow:none !important;
-    }
-    .btn[disabled]:hover{
-      transform:none;
-      box-shadow:none;
-      border-color: var(--line);
-      background: rgba(255,255,255,.96);
-    }
-
-    .btn.cta{
-      justify-content:center;
-      color: rgba(255,255,255,.96);
-      background: linear-gradient(135deg, rgba(79,70,229,.98), rgba(37,99,235,.92));
-      border-color: rgba(255,255,255,.18);
-      box-shadow: 0 14px 30px rgba(37,99,235,.16);
-    }
-    .btn.cta:hover{
-      transform: translateY(-1px);
-      box-shadow: 0 18px 44px rgba(37,99,235,.20);
-    }
-
     .pickBanner{
-      display:none;
-      align-items:center;
-      gap: 10px;
       padding: 10px 0 2px;
+      background: transparent;
+      border: 0;
+      box-shadow: none;
       margin-bottom: 8px;
-      color: rgba(15,23,42,.86);
     }
-    .pickBanner.show{ display:flex; }
-    .pickBanner .dot{
-      width: 10px; height: 10px;
-      border-radius: 999px;
-      background: var(--accent);
-      box-shadow: 0 0 0 6px rgba(79,70,229,.10);
-      flex: 0 0 auto;
+    .pickBanner .left{ display: contents; }
+    .pickBanner span{ margin-left: 8px; font-weight: 650; }
+    .grid{
+      border-top: 1px solid var(--stroke);
+      padding-top: 14px;
     }
-    .pickBanner b{
-      font-weight: 950;
-      letter-spacing: -0.02em;
-      font-size: 13px;
+    .rowActions{
+      display:flex;
+      gap: 10px;
+      justify-content:flex-end;
+      flex-wrap:wrap;
+      margin-top: 10px;
+      border-top: 1px solid var(--stroke);
+      padding-top: 12px;
     }
-    .pickBanner span{
-      font-size: 12px;
-      color: rgba(15,23,42,.62);
-      font-weight: 650;
-      margin-left: 8px;
-    }
-
-    .attention .btn{
-      animation: pulse 1.15s ease-in-out infinite;
-      border-color: var(--accentLine);
-      box-shadow: 0 0 0 0 rgba(79,70,229,.14);
-    }
-    .attention .btn:nth-child(2){ animation-delay: .05s; }
-    .attention .btn:nth-child(3){ animation-delay: .10s; }
-    .attention .btn:nth-child(4){ animation-delay: .15s; }
-    @keyframes pulse{
-      0%   { transform: translateY(0); box-shadow: 0 0 0 0 rgba(79,70,229,.14); }
-      50%  { transform: translateY(-1px); box-shadow: 0 0 0 6px rgba(79,70,229,.08); }
-      100% { transform: translateY(0); box-shadow: 0 0 0 0 rgba(79,70,229,.14); }
-    }
-    @media (prefers-reduced-motion: reduce){
-      .attention .btn{ animation: none !important; }
-    }
-
+    .helpBox{ display:none !important; }
     .tooltip{
       position: fixed;
       z-index: 20000;
@@ -255,9 +783,8 @@
       padding: 10px 12px;
       border-radius: 14px;
       background: rgba(255,255,255,.95);
-      border: 1px solid var(--line);
+      border: 1px solid var(--stroke);
       box-shadow: 0 16px 40px rgba(15,23,42,.12);
-      backdrop-filter: blur(10px);
       display:none;
       transform: translateY(6px);
       opacity: 0;
@@ -283,51 +810,12 @@
       font-weight: 650;
     }
 
-    /* PAGE 2 */
     .mainTop{
-      border-top: 1px solid var(--line);
+      border-top: 1px solid var(--stroke);
       padding-top: 14px;
       display:grid;
       gap: 10px;
     }
-
-    /* ✅ Context bar (시인성 강화: 배경/테두리) */
-    .contextBar{
-      border: 1px solid var(--line);
-      background: rgba(255,255,255,.82);
-      border-radius: 14px;
-      padding: 10px 12px;
-      display:flex;
-      gap: 10px;
-      flex-wrap:wrap;
-      align-items:center;
-    }
-    .contextBar strong{
-      font-size: 12px;
-      font-weight: 950;
-      color: rgba(15,23,42,.86);
-      letter-spacing:-0.01em;
-    }
-    .contextBar .kv{
-      font-size: 12px;
-      color: rgba(15,23,42,.66);
-      font-weight: 750;
-    }
-    .contextBar .kv b{
-      color: rgba(15,23,42,.88);
-      font-weight: 950;
-      padding: 2px 8px;
-      border-radius: 999px;
-      border: 1px solid var(--line);
-      background: rgba(15,23,42,.03);
-      margin-left: 6px;
-    }
-    .contextBar .kv b.on{
-      border-color: var(--accentLine);
-      background: var(--accentSoft);
-    }
-
-    /* Tabs */
     .tabs{
       display:grid;
       gap: 10px;
@@ -345,7 +833,7 @@
       margin-right: 4px;
     }
     .tabBtn{
-      border: 1px solid var(--line);
+      border: 1px solid var(--stroke);
       background: rgba(255,255,255,.92);
       color: rgba(15,23,42,.88);
       border-radius: 999px;
@@ -354,11 +842,11 @@
       font-weight: 900;
       letter-spacing: -0.02em;
       cursor: pointer;
-      transition: border-color .12s ease, box-shadow .12s ease, transform .12s ease, opacity .12s ease, background .12s ease;
+      transition: border-color .12s ease, box-shadow .12s ease, transform .12s ease, opacity .12s ease;
       user-select:none;
     }
     .tabBtn:hover{
-      border-color: var(--line2);
+      border-color: var(--stroke2);
       box-shadow: 0 10px 24px rgba(15,23,42,.08);
       transform: translateY(-1px);
     }
@@ -367,10 +855,10 @@
       box-shadow: none;
     }
     .tabBtn.selected{
-      color: rgba(15,23,42,.92);
-      background: rgba(79,70,229,.10);
-      border-color: rgba(79,70,229,.34);
-      box-shadow: 0 14px 30px rgba(37,99,235,.10);
+      color: rgba(255,255,255,.96);
+      background: linear-gradient(135deg, rgba(79,70,229,.98), rgba(37,99,235,.92));
+      border-color: rgba(255,255,255,.18);
+      box-shadow: 0 14px 30px rgba(37,99,235,.16);
     }
     .tabBtn[disabled]{
       cursor:not-allowed;
@@ -381,181 +869,39 @@
     .tabBtn[disabled]:hover{
       transform:none;
       box-shadow:none;
-      border-color: var(--line);
+      border-color: var(--stroke);
     }
 
-    .grid{
-      display:grid;
-      grid-template-columns: 1.05fr .95fr;
-      gap: 14px;
-      align-items:start;
-      border-top: 1px solid var(--line);
-      padding-top: 14px;
-    }
-    @media (max-width: 960px){
-      .grid{ grid-template-columns: 1fr; }
-    }
-    #legacyStage{
-      display: grid;
-      gap: 10px;
-    }
-    #recUI{
-      display: grid;
-      gap: 10px;
-    }
-    .stageBox{
-      border: 1px solid var(--line);
-      background: rgba(255,255,255,.86);
-      border-radius: 14px;
-      padding: 12px;
-      display: grid;
-      gap: 10px;
-    }
-    .stageHead{
-      display:flex;
-      align-items:flex-end;
-      justify-content:space-between;
-      gap: 10px;
-      flex-wrap:wrap;
-    }
-    .stageHead b{
-      font-size: 13px;
-      font-weight: 950;
-      letter-spacing:-0.02em;
-      color: rgba(15,23,42,.90);
-    }
-    .stageHead span{
-      font-size: 12px;
-      color: rgba(15,23,42,.62);
-      font-weight: 650;
-    }
-    #outfitCanvas{
-      width: 100%;
-      height: auto;
-      display: block;
-      border-radius: 12px;
-      border: 1px solid var(--line);
-      background: linear-gradient(180deg, rgba(248,250,252,.95), rgba(241,245,249,.92));
-    }
+    #outfitCanvas{ width: 100%; height: auto; display:block; }
 
-    /* Recommendation UI */
-    .card{
-      border: 1px solid var(--line);
-      background: rgba(255,255,255,.86);
-      border-radius: 14px;
-      padding: 12px;
-      display:grid;
-      gap: 10px;
-    }
-    .cardHead{
-      display:flex;
-      align-items:flex-end;
-      justify-content:space-between;
-      gap: 10px;
-      flex-wrap:wrap;
-    }
-    .cardHead b{
-      font-size: 13px;
-      font-weight: 950;
-      letter-spacing:-0.02em;
-      color: rgba(15,23,42,.90);
-    }
-    .cardHead span{
-      font-size: 12px;
-      color: rgba(15,23,42,.62);
-      font-weight: 650;
-    }
-
-    .swatchBtn{
-      justify-content:space-between;
-      gap: 10px;
-    }
-    .swatch{
-      width: 14px;
-      height: 14px;
-      border-radius: 4px;
-      border: 1px solid rgba(15, 23, 42, .16);
-      box-shadow: 0 10px 18px rgba(15, 23, 42, .08);
-      flex: 0 0 auto;
-    }
-
-    .chips{
-      display:flex;
-      flex-wrap:wrap;
-      gap: 8px;
-    }
-    .chip{
-      cursor:pointer;
-      user-select:none;
-      border-radius: 999px;
-      padding: 10px 12px;
-      border: 1px solid rgba(15,23,42,.14);
-      background: rgba(255,255,255,.88);
-      font-weight: 900;
-      letter-spacing:-0.01em;
-      display:inline-flex;
-      align-items:center;
-      gap: 10px;
-      transition: transform .12s ease, border-color .12s ease, box-shadow .12s ease;
-      color: rgba(15,23,42,.88);
-    }
-    .chip:hover{
-      transform: translateY(-1px);
-      border-color: rgba(15,23,42,.22);
-      box-shadow: 0 12px 26px rgba(15,23,42,.10);
-    }
-    .chip:active{
-      transform: translateY(0) scale(.995);
-      box-shadow: none;
-    }
-    .chip .swatch{ width: 12px; height: 12px; border-radius: 4px; box-shadow:none; }
-
-    .empty{
-      padding: 10px 0;
-      font-size: 12px;
-      color: rgba(15,23,42,.62);
-      font-weight: 650;
-    }
-
-    .toast{
-      position: fixed;
-      left: 50%;
-      bottom: 18px;
-      transform: translateX(-50%);
-      background: rgba(255,255,255,.94);
-      border: 1px solid var(--line);
-      color: rgba(15, 23, 42, .92);
-      padding: 10px 12px;
-      border-radius: 14px;
-      font-size: 13px;
-      display:none;
-      z-index: 10000;
-      box-shadow: 0 14px 34px rgba(15,23,42,.10);
-      font-weight: 800;
-    }
-    .toast.show{ display:block; animation: toast .18s ease both; }
-    @keyframes toast{
-      from{ transform: translateX(-50%) translateY(6px); opacity:0; }
-      to{ transform: translateX(-50%) translateY(0); opacity:1; }
+    @media (prefers-reduced-motion: reduce){
+      *, *::before, *::after{
+        animation: none !important;
+        transition: none !important;
+      }
+      #fxCanvas{ display:none; }
     }
   </style>
 </head>
 
 <body>
-  <div class="shell">
-    <header class="topHeader" aria-label="헤더">
-      <div class="overline">남자는 핏과 컬러가 전부다.</div>
-      <h1>오늘 뭐 입지?</h1>
-      <div class="subline">Men's fashion color match</div>
+  <canvas id="fxCanvas"></canvas>
+  <div class="errorBanner" id="errorBanner">이미지 문제를 확인 중입니다.</div>
 
+  <div class="shell">
+    <header class="hero" aria-label="헤더">
+      <div class="heroInner">
+        <div class="overline">남자는 핏과 컬러가 전부다.</div>
+        <h1>오늘 뭐 입지?</h1>
+        <div class="subline">Men's fashion color match</div>
+      </div>
       <div class="statusLine" aria-label="선택 상태">
-        <div><b>1) 계절</b>: <span id="pillSeasonVal">아직</span></div>
+        <div><b id="pillSeason">1) 계절</b>: <span id="pillSeasonVal">아직</span></div>
         <span class="dotSep">·</span>
-        <div><b>2) 기능</b>: <span id="pillNeedVal">아직</span></div>
+        <div><b id="pillNeed">2) 기능</b>: <span id="pillNeedVal">아직</span></div>
       </div>
     </header>
 
-    <!-- PAGE 1 -->
     <main class="page show" id="pageSetup" aria-label="첫 페이지: 옵션 선택">
       <div class="pickBanner show" id="bannerSeason" role="note" aria-live="polite">
         <span class="dot" aria-hidden="true"></span>
@@ -566,9 +912,8 @@
       <section class="section" id="secSeason" aria-label="계절 선택">
         <div class="sectionHead">
           <b>1. 언제 입으실건가요?</b>
-          <span>버튼 hover 시 설명</span>
+          <span>버튼에 마우스를 올리면 설명이 뜹니다</span>
         </div>
-
         <div class="btnGrid4 attention" id="seasonButtons">
           <button class="btn" type="button" data-season="봄">봄</button>
           <button class="btn" type="button" data-season="여름">여름</button>
@@ -588,38 +933,27 @@
           <b>2. 무엇이 필요한가요?</b>
           <span>버튼 hover 시 상세 설명</span>
         </div>
-
         <div class="btnGrid2" id="needButtonsAll">
           <div class="btnGrid2 attention" id="needButtonsActive">
             <button class="btn" type="button" data-need="pantsToTop">하의에 맞는 상의 (기본)</button>
             <button class="btn" type="button" data-need="topToPants">상의에 맞는 하의</button>
           </div>
-
           <div class="btnGrid2" id="needButtonsDisabled">
-            <button class="btn" type="button" data-need="outerToIn" disabled aria-disabled="true">
-              아우터에 맞는 상/하의 (서비스 준비중)
-            </button>
-            <button class="btn" type="button" data-need="premium" disabled aria-disabled="true">
-              Premium : 맞춤형 (서비스 준비중)
-            </button>
+            <button class="btn" type="button" data-need="outerToIn" disabled aria-disabled="true">아우터에 맞는 상/하의 (서비스 준비중)</button>
+            <button class="btn" type="button" data-need="premium" disabled aria-disabled="true">Premium : 맞춤형 (서비스 준비중)</button>
           </div>
         </div>
-
-        <div style="display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap; margin-top:10px; border-top:1px solid var(--line); padding-top:12px;">
-          <button class="btn" type="button" id="btnReset">초기화</button>
+        <div class="rowActions">
+          <button class="btn ghost" type="button" id="btnReset">초기화</button>
           <button class="btn cta" type="button" id="btnGo" disabled>추천받기 (선택 필요)</button>
         </div>
       </section>
     </main>
 
-    <!-- PAGE 2 -->
-    <main class="page" id="pageMain" aria-label="두 번째 페이지: 추천 화면">
+    <section class="page" id="pageMain" aria-label="두 번째 페이지: 추천 화면">
       <section class="mainTop">
-        <div class="contextBar" aria-label="현재 선택 요약">
-          <strong>현재 선택</strong>
-          <div class="kv">계절<b id="ctxSeason">아직</b></div>
-          <div class="kv">기능<b id="ctxNeed">아직</b></div>
-          <div class="kv">기준 색<b id="ctxBaseColor">아직</b></div>
+        <div class="statusLine" style="justify-content:flex-start; margin-top:0;">
+          <div><b>선택 반영</b>: <span id="pillFromSetup">아직</span></div>
         </div>
 
         <div class="tabs" aria-label="컨텍스트 탭">
@@ -639,23 +973,149 @@
           </div>
         </div>
       </section>
-
-      <section class="grid" aria-label="추천 UI">
-        <section id="legacyStage">
-          <div class="stageBox">
-            <div class="stageHead">
-              <b>착장 미리보기</b>
-              <span>추천 UI와 분리된 고정 스테이지</span>
-            </div>
-            <canvas id="outfitCanvas" width="520" height="620" aria-label="착장 캔버스"></canvas>
+      <section class="grid">
+      <!-- LEFT -->
+      <section class="panel">
+        <div class="panelHead">
+          <div class="panelTitle">미리보기 (상의/하의)</div>
+          <div class="meta">
+            <span class="pill" id="statePill">하의 선택: 아직</span>
+            <span class="pill" id="shirtPill">상의 선택: 아직</span>
+            <span class="pill" id="fitPill">하의 핏: 아직</span>
+            <span class="pill" id="topTypePill">상의 종류: 아직</span>
           </div>
-        </section>
-        <section id="recUI">
-          <section id="mainLeft"></section>
-          <section id="mainRight"></section>
-        </section>
+        </div>
+
+        <div class="outfitWrap">
+          <div class="outfitCard">
+            <div class="outfitTopRow">
+              <div class="hint">
+                1) 오른쪽에서 <b>하의 색</b>을 먼저 선택하세요.<br/>
+                2) 추천/비추/그닥 색을 <b>클릭</b>하면 상의가 채워지고 멘트가 바뀝니다.
+              </div>
+              <button class="btn primary" id="btnBoom" type="button">생성하기 🎉</button>
+            </div>
+
+            <div class="outfitGrid">
+              <div class="figure" aria-label="상의/하의 그림">
+                <canvas id="outfitCanvas" width="360" height="320" aria-label="상의와 하의"></canvas>
+              </div>
+
+              <div class="legend" aria-label="강추/괜찮음/그닥/비추 안내">
+                <div class="legendItem">
+                  <div class="legendTop">
+                    <span class="badgeIcon">
+                      <img class="iconImg" id="legendHeart" alt="하트 아이콘" />
+                      <b>강추</b>
+                    </span>
+                  </div>
+                  <div class="legendMsg">오늘 각이다</div>
+                </div>
+
+                <div class="legendItem">
+                  <div class="legendTop">
+                    <span class="badgeIcon">
+                      <img class="iconImg" id="legendCircle" alt="동그라미 아이콘" />
+                      <b>괜찮음</b>
+                    </span>
+                  </div>
+                  <div class="legendMsg">낫 밷</div>
+                </div>
+
+                <div class="legendItem">
+                  <div class="legendTop">
+                    <span class="badgeIcon">
+                      <img class="iconImg" id="legendTriangle" alt="세모 아이콘" />
+                      <b>그닥</b>
+                    </span>
+                  </div>
+                  <div class="legendMsg">상대방 반응 체크하자</div>
+                </div>
+
+                <div class="legendItem">
+                  <div class="legendTop">
+                    <span class="badgeIcon">
+                      <img class="iconImg" id="legendX" alt="엑스 아이콘" />
+                      <b>비추</b>
+                    </span>
+                  </div>
+                  <div class="legendMsg">와 요즘은 콘돔이 이렇게도 나오네</div>
+                </div>
+
+                <div class="callout" id="statusCallout">
+                  하의 색을 먼저 선택해 주세요. 선택하면 오른쪽에 추천/비추/그닥 색이 나타납니다.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
-    </main>
+
+      <!-- RIGHT -->
+      <section class="panel" id="rightPanel">
+        <div class="panelHead">
+          <div class="panelTitle">컬러 선택</div>
+          <div class="meta">
+            <span>오른쪽에서 하의 → 추천/비추/그닥 색 클릭</span>
+          </div>
+        </div>
+
+        <div class="choices">
+          <!-- ✅ 시작 안내 배너(하의 선택 전만 표시) -->
+          <div class="pantsPickBanner show" id="pantsPickBanner" role="note" aria-live="polite">
+            <div class="left">
+              <span class="dot" aria-hidden="true"></span>
+              <div style="display:grid; gap:2px;">
+                <b>먼저 하의 색부터 선택하세요</b>
+                <span>하의를 고르면 추천 상의가 열립니다.</span>
+              </div>
+            </div>
+            <button type="button" id="btnFocusPants">여기부터</button>
+          </div>
+
+          <div class="selectRow">
+            <div class="panelTitle pantsTitle" id="pantsTitle" style="font-size:13px; opacity:.9;">1) 하의 색 (10가지)</div>
+            <div class="pantsButtons attention" id="pantsButtons"></div>
+          </div>
+
+          <div class="selectRow">
+            <div class="panelTitle" style="font-size:13px; opacity:.9;">1-2) 하의 핏</div>
+            <div class="segButtons" id="bottomFitButtons"></div>
+          </div>
+
+          <div class="selectRow">
+            <div class="panelTitle" style="font-size:13px; opacity:.9;">1-3) 상의 종류</div>
+            <div class="segButtons" id="topTypeButtons"></div>
+          </div>
+
+          <div class="resultSection">
+            <div class="resultHead">
+              <strong>2) 추천 컬러 (1~2개)</strong>
+              <span class="muted">클릭하면 상의에 적용</span>
+            </div>
+            <div class="chips" id="goodChips"></div>
+          </div>
+
+          <div class="resultSection">
+            <div class="resultHead">
+              <strong>3) 비추 컬러 (1~2개)</strong>
+              <span class="muted">피하시면 편안합니다</span>
+            </div>
+            <div class="chips" id="badChips"></div>
+          </div>
+
+          <div class="resultSection">
+            <div class="resultHead">
+              <strong>4) 대안 (그닥)</strong>
+              <span class="muted">대안 없으면…</span>
+            </div>
+            <div class="chips" id="mehChips"></div>
+          </div>
+        </div>
+      </section>
+      </section>
+    </section>
+
   </div>
 
   <div class="tooltip" id="tooltip" role="note" aria-live="polite">
@@ -667,7 +1127,25 @@
 
   <script>
     // =========================================================
-    // 1) 색 팔레트(기존 사용 색 유지)
+    // 문자열
+    // =========================================================
+    const STRINGS = {
+      toast: {
+        needPants: "먼저 하의 색부터 선택하세요",
+        pantsSelected: (name) => `${name} 하의 선택 ✅`,
+        shirtApplied: (name) => `상의 ${name} 적용!`,
+        needPantsForBoom: "먼저 하의 색부터 선택해 주세요!",
+        fireworks: "폭죽 🎆 (화면 가득)"
+      },
+      callout: {
+        needPants: "하의 색을 먼저 선택해 주세요. 선택하면 오른쪽에 추천/비추/그닥 색이 나타납니다.",
+        needPantsShort: "하의 색을 먼저 선택해 주세요. (오른쪽 5가지 중 선택)",
+        pantsPicked: (name) => `지금 하의는 <b>${name}</b>입니다.<br/>오른쪽에서 상의 컬러를 <b>클릭</b>하면 조합 멘트가 표시됩니다.`
+      }
+    };
+
+    // =========================================================
+    // 팔레트(네온X, 다운톤)
     // =========================================================
     const COLORS = {
       "녹색":   { hex:"#2F7D57" },
@@ -676,6 +1154,7 @@
       "핑크":   { hex:"#D08AAA" },
       "네이비": { hex:"#1D2B5B" },
       "흰색":   { hex:"#F3F4F6" },
+      "그레이": { hex:"#9CA3AF" },
       "진청":   { hex:"#1F3B6F" },
       "흑청":   { hex:"#16233A" },
       "연청":   { hex:"#82A9D6" },
@@ -689,10 +1168,244 @@
     };
 
     // =========================================================
-    // 2) 기존 RULES(하의→상의): pantsColor -> shirtColor 추천
-    //    *정합성 보장: 추천 칩은 이 RULES에서만 나오게 구현*
+    // 아이콘(이미지) - inline SVG data URI
     // =========================================================
-    const RULES_PANTS_TO_TOP = {
+    function svgDataUri(svg){
+      const encoded = encodeURIComponent(svg)
+        .replace(/'/g, "%27")
+        .replace(/"/g, "%22");
+      return `data:image/svg+xml;charset=utf-8,${encoded}`;
+    }
+    const ICON = {
+      heart: svgDataUri(`
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+          <path
+            d="M12 21
+               C12 21, 4 15.6, 4 9.8
+               C4 6.6, 6.4 4.5, 9.1 4.5
+               C10.9 4.5, 12 5.6, 12 5.6
+               C12 5.6, 13.1 4.5, 14.9 4.5
+               C17.6 4.5, 20 6.6, 20 9.8
+               C20 15.6, 12 21, 12 21 Z"
+            fill="#E11D48"
+          />
+        </svg>
+      `),
+      circle: svgDataUri(`
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="8.5" fill="#ffffff" />
+          <circle cx="12" cy="12" r="8.5" fill="none" stroke="#111827" stroke-width="2.4"/>
+        </svg>
+      `),
+      triangle: svgDataUri(`
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+          <path d="M12 5.3 L20 19 H4 Z" fill="#ffffff" stroke="#111827" stroke-width="2.4" stroke-linejoin="round"/>
+        </svg>
+      `),
+      x: svgDataUri(`
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+          <path d="M6.5 6.5 L17.5 17.5" stroke="#DC2626" stroke-width="3.2" stroke-linecap="round"/>
+          <path d="M17.5 6.5 L6.5 17.5" stroke="#DC2626" stroke-width="3.2" stroke-linecap="round"/>
+        </svg>
+      `)
+    };
+
+    const GRADE = {
+      "강추": { icon: ICON.heart, phrase: "오늘 각이다" },
+      "괜찮음": { icon: ICON.circle, phrase: "낫 밷" },
+      "그닥": { icon: ICON.triangle, phrase: "상대방 반응 체크하자" },
+      "비추": { icon: ICON.x, phrase: "와 요즘은 콘돔이 이렇게도 나오네" }
+    };
+
+    const EDU_TEXT = {
+      contrast: "하의가 어두우면 상의는 밝게 가는 게 안전합니다.",
+      harmony: "같은 계열이라 튀지 않고 자연스럽습니다.",
+      point: "상의에 포인트를 줘서 시선이 분산됩니다.",
+      avoid: "이 조합은 촌스러워 보일 확률이 높습니다."
+    };
+
+    const STYLE_LINE = {
+      "셔츠":  "셔츠는 ‘깔끔함’이 이깁니다. 톤을 정돈하세요.",
+      "맨투맨":"맨투맨은 ‘무난함’이 정답입니다. 과한 색은 피하세요.",
+      "후드":"후드티는 ‘캐주얼’이 핵심입니다. 대비를 너무 세게 주지 마세요.",
+      "니트":  "니트는 ‘고급스러움’이 포인트입니다. 뉴트럴 톤이 안전합니다."
+    };
+
+    const SHIRT_GROUP = {
+      core: ["흰색","아이보리","크림","그레이","차콜","네이비","베이지"],
+      earth: ["브라운","카키"],
+      accent: ["파란색","노란색","핑크","녹색"]
+    };
+
+    function shirtBaseScore(shirtName, pantsName){
+      if (SHIRT_GROUP.core.indexOf(shirtName) !== -1) return 2;
+      if (SHIRT_GROUP.earth.indexOf(shirtName) !== -1) return 1;
+
+      // accent는 기본적으로 불리
+      if (SHIRT_GROUP.accent.indexOf(shirtName) !== -1){
+        // 단, 하의가 무채/중립이면 패널티 완화
+        if (pantsName === "검정" || pantsName === "차콜" || pantsName === "네이비" || pantsName === "베이지"){
+          return 0;
+        }
+        return -1;
+      }
+      return 0;
+    }
+
+    const EDU_CASES = [
+      {"pants":"검정","shirt":"흰색","eduKey":"contrast","weight":3},
+      {"pants":"검정","shirt":"아이보리","eduKey":"contrast","weight":3},
+      {"pants":"검정","shirt":"크림","eduKey":"contrast","weight":3},
+      {"pants":"검정","shirt":"베이지","eduKey":"harmony","weight":2},
+      // 제외됨: pants=검정 shirt=그레이 (COLORS에 없음)
+      {"pants":"검정","shirt":"파란색","eduKey":"harmony","weight":2},
+      {"pants":"검정","shirt":"카키","eduKey":"point","weight":1},
+      {"pants":"검정","shirt":"브라운","eduKey":"point","weight":1},
+
+      {"pants":"차콜","shirt":"흰색","eduKey":"contrast","weight":3},
+      {"pants":"차콜","shirt":"아이보리","eduKey":"contrast","weight":3},
+      {"pants":"차콜","shirt":"크림","eduKey":"contrast","weight":3},
+      {"pants":"차콜","shirt":"파란색","eduKey":"contrast","weight":3},
+      {"pants":"차콜","shirt":"네이비","eduKey":"harmony","weight":2},
+      // 제외됨: pants=차콜 shirt=그레이 (COLORS에 없음)
+      {"pants":"차콜","shirt":"베이지","eduKey":"harmony","weight":2},
+      {"pants":"차콜","shirt":"브라운","eduKey":"point","weight":1},
+
+      {"pants":"네이비","shirt":"흰색","eduKey":"contrast","weight":3},
+      {"pants":"네이비","shirt":"아이보리","eduKey":"contrast","weight":3},
+      {"pants":"네이비","shirt":"크림","eduKey":"contrast","weight":3},
+      {"pants":"네이비","shirt":"파란색","eduKey":"harmony","weight":2},
+      // 제외됨: pants=네이비 shirt=그레이 (COLORS에 없음)
+      {"pants":"네이비","shirt":"베이지","eduKey":"harmony","weight":2},
+      {"pants":"네이비","shirt":"브라운","eduKey":"point","weight":1},
+      {"pants":"네이비","shirt":"카키","eduKey":"point","weight":1},
+
+      {"pants":"진청","shirt":"흰색","eduKey":"contrast","weight":3},
+      {"pants":"진청","shirt":"아이보리","eduKey":"contrast","weight":3},
+      {"pants":"진청","shirt":"크림","eduKey":"contrast","weight":3},
+      {"pants":"진청","shirt":"파란색","eduKey":"harmony","weight":3},
+      // 제외됨: pants=진청 shirt=그레이 (COLORS에 없음)
+      {"pants":"진청","shirt":"차콜","eduKey":"harmony","weight":2},
+      {"pants":"진청","shirt":"베이지","eduKey":"harmony","weight":2},
+      {"pants":"진청","shirt":"브라운","eduKey":"point","weight":1},
+
+      {"pants":"흑청","shirt":"흰색","eduKey":"contrast","weight":3},
+      {"pants":"흑청","shirt":"아이보리","eduKey":"contrast","weight":3},
+      {"pants":"흑청","shirt":"크림","eduKey":"contrast","weight":3},
+      // 제외됨: pants=흑청 shirt=그레이 (COLORS에 없음)
+      {"pants":"흑청","shirt":"차콜","eduKey":"harmony","weight":2},
+      {"pants":"흑청","shirt":"파란색","eduKey":"harmony","weight":2},
+      {"pants":"흑청","shirt":"베이지","eduKey":"harmony","weight":2},
+      {"pants":"흑청","shirt":"브라운","eduKey":"point","weight":1},
+
+      {"pants":"연청","shirt":"흰색","eduKey":"harmony","weight":3},
+      {"pants":"연청","shirt":"아이보리","eduKey":"harmony","weight":3},
+      {"pants":"연청","shirt":"크림","eduKey":"harmony","weight":2},
+      {"pants":"연청","shirt":"네이비","eduKey":"contrast","weight":3},
+      {"pants":"연청","shirt":"차콜","eduKey":"contrast","weight":2},
+      // 제외됨: pants=연청 shirt=그레이 (COLORS에 없음)
+      {"pants":"연청","shirt":"베이지","eduKey":"harmony","weight":2},
+      {"pants":"연청","shirt":"파란색","eduKey":"harmony","weight":2},
+
+      {"pants":"베이지","shirt":"네이비","eduKey":"contrast","weight":3},
+      {"pants":"베이지","shirt":"파란색","eduKey":"contrast","weight":2},
+      {"pants":"베이지","shirt":"흰색","eduKey":"harmony","weight":3},
+      {"pants":"베이지","shirt":"아이보리","eduKey":"harmony","weight":3},
+      {"pants":"베이지","shirt":"크림","eduKey":"harmony","weight":2},
+      // 제외됨: pants=베이지 shirt=그레이 (COLORS에 없음)
+      {"pants":"베이지","shirt":"차콜","eduKey":"harmony","weight":2},
+      {"pants":"베이지","shirt":"브라운","eduKey":"harmony","weight":2},
+
+      {"pants":"아이보리","shirt":"네이비","eduKey":"contrast","weight":3},
+      {"pants":"아이보리","shirt":"차콜","eduKey":"contrast","weight":2},
+      // 제외됨: pants=아이보리 shirt=그레이 (COLORS에 없음)
+      {"pants":"아이보리","shirt":"파란색","eduKey":"harmony","weight":2},
+      {"pants":"아이보리","shirt":"브라운","eduKey":"harmony","weight":2},
+      {"pants":"아이보리","shirt":"카키","eduKey":"point","weight":1},
+      {"pants":"아이보리","shirt":"녹색","eduKey":"point","weight":1},
+      {"pants":"아이보리","shirt":"베이지","eduKey":"harmony","weight":2},
+
+      {"pants":"크림","shirt":"네이비","eduKey":"contrast","weight":3},
+      {"pants":"크림","shirt":"차콜","eduKey":"contrast","weight":2},
+      // 제외됨: pants=크림 shirt=그레이 (COLORS에 없음)
+      {"pants":"크림","shirt":"파란색","eduKey":"harmony","weight":2},
+      {"pants":"크림","shirt":"브라운","eduKey":"harmony","weight":2},
+      {"pants":"크림","shirt":"카키","eduKey":"point","weight":1},
+      {"pants":"크림","shirt":"베이지","eduKey":"harmony","weight":2},
+      {"pants":"크림","shirt":"녹색","eduKey":"point","weight":1},
+
+      {"pants":"카키","shirt":"흰색","eduKey":"contrast","weight":3},
+      {"pants":"카키","shirt":"아이보리","eduKey":"contrast","weight":3},
+      {"pants":"카키","shirt":"크림","eduKey":"contrast","weight":2},
+      {"pants":"카키","shirt":"네이비","eduKey":"harmony","weight":3},
+      {"pants":"카키","shirt":"파란색","eduKey":"harmony","weight":2},
+      // 제외됨: pants=카키 shirt=그레이 (COLORS에 없음)
+      {"pants":"카키","shirt":"베이지","eduKey":"harmony","weight":2},
+      {"pants":"카키","shirt":"브라운","eduKey":"harmony","weight":2},
+
+      {"pants":"브라운","shirt":"흰색","eduKey":"contrast","weight":3},
+      {"pants":"브라운","shirt":"아이보리","eduKey":"contrast","weight":3},
+      {"pants":"브라운","shirt":"크림","eduKey":"contrast","weight":2},
+      {"pants":"브라운","shirt":"파란색","eduKey":"contrast","weight":3},
+      {"pants":"브라운","shirt":"네이비","eduKey":"harmony","weight":2},
+      // 제외됨: pants=브라운 shirt=그레이 (COLORS에 없음)
+      {"pants":"브라운","shirt":"베이지","eduKey":"harmony","weight":2},
+      {"pants":"브라운","shirt":"카키","eduKey":"harmony","weight":2}
+    ];
+
+    const EDU_BAD_CASES = [
+      /* 둘 다 너무 어두움(답답) */
+      {"pants":"검정","shirt":"네이비","weight":3},
+      {"pants":"검정","shirt":"차콜","weight":2},
+      {"pants":"검정","shirt":"흑청","weight":2},
+
+      {"pants":"네이비","shirt":"검정","weight":3},
+      {"pants":"네이비","shirt":"흑청","weight":2},
+      {"pants":"네이비","shirt":"차콜","weight":2},
+
+      {"pants":"차콜","shirt":"검정","weight":3},
+      {"pants":"차콜","shirt":"네이비","weight":2},
+      {"pants":"차콜","shirt":"흑청","weight":2},
+
+      {"pants":"흑청","shirt":"검정","weight":3},
+      {"pants":"흑청","shirt":"네이비","weight":2},
+      {"pants":"흑청","shirt":"흑청","weight":3},
+
+      /* 데님온데님(난이도) */
+      {"pants":"진청","shirt":"흑청","weight":2},
+      {"pants":"진청","shirt":"진청","weight":2},
+      {"pants":"연청","shirt":"연청","weight":2},
+
+      /* 톤 겹침(카키/그린 계열) */
+      {"pants":"카키","shirt":"녹색","weight":3},
+      {"pants":"카키","shirt":"카키","weight":2},
+      {"pants":"녹색","shirt":"카키","weight":2},
+
+      /* 포인트색이 애매한 하의에서 촌스러울 가능성 */
+      {"pants":"베이지","shirt":"노란색","weight":2},
+      {"pants":"베이지","shirt":"핑크","weight":2},
+      {"pants":"아이보리","shirt":"노란색","weight":2},
+      {"pants":"아이보리","shirt":"핑크","weight":2},
+      {"pants":"크림","shirt":"노란색","weight":2},
+      {"pants":"크림","shirt":"핑크","weight":2},
+      {"pants":"연청","shirt":"노란색","weight":2},
+      {"pants":"연청","shirt":"핑크","weight":2},
+
+      /* 브라운 + 카키 과하면 답답/촌스러움 가능 */
+      {"pants":"브라운","shirt":"카키","weight":2},
+      {"pants":"카키","shirt":"브라운","weight":2},
+
+      /* 차콜/검정 + 노란/핑크는 사람에 따라 튈 수 있어 경고 */
+      {"pants":"차콜","shirt":"노란색","weight":1},
+      {"pants":"차콜","shirt":"핑크","weight":1},
+      {"pants":"검정","shirt":"노란색","weight":1},
+      {"pants":"검정","shirt":"핑크","weight":1}
+    ];
+
+    // =========================================================
+    // 룰 데이터
+    // =========================================================
+    const RULES = {
       "진청": {
         good: [
           { color:"파란색", grade:"강추" },
@@ -829,52 +1542,1265 @@
     };
 
     // =========================================================
-    // 3) “상의→하의” 역룰 생성(정합성: 원본 RULES로부터만 생성)
-    //    shirtColor -> pantsColor 추천
+    // 유틸
     // =========================================================
-    function buildInverseRules(pantsToTopRules){
-      const inv = {};
-      const ensure = (shirt)=>{
-        if (!inv[shirt]) inv[shirt] = { good:[], bad:[], meh:[] };
-        return inv[shirt];
-      };
-
-      for (const pants of Object.keys(pantsToTopRules)){
-        const r = pantsToTopRules[pants] || {};
-        (r.good || []).forEach(it => ensure(it.color).good.push({ color: pants, grade: it.grade }));
-        (r.bad  || []).forEach(it => ensure(it.color).bad.push({  color: pants, grade: it.grade }));
-        (r.meh  || []).forEach(it => ensure(it.color).meh.push({  color: pants, grade: it.grade }));
-      }
-
-      // 중복 제거(정합 유지하면서 unique)
-      const uniq = (arr)=>{
-        const seen = new Set();
-        const out = [];
-        for (const it of arr){
-          const k = it.color + "|" + it.grade;
-          if (seen.has(k)) continue;
-          seen.add(k);
-          out.push(it);
-        }
-        return out;
-      };
-
-      for (const shirt of Object.keys(inv)){
-        inv[shirt].good = uniq(inv[shirt].good);
-        inv[shirt].bad  = uniq(inv[shirt].bad);
-        inv[shirt].meh  = uniq(inv[shirt].meh);
-      }
-      return inv;
+    function colorHexSafe(name, fallback){
+      const c = COLORS && COLORS[name];
+      return (c && c.hex) ? c.hex : (fallback || "#9CA3AF");
+    }
+    function hasColor(name){
+      return !!(COLORS && COLORS[name] && COLORS[name].hex);
     }
 
-    const RULES_TOP_TO_PANTS = buildInverseRules(RULES_PANTS_TO_TOP);
+    function validateRules(){
+      const missing = [];
+      Object.entries(RULES).forEach(([pants, rule]) => {
+        [pants].forEach((name)=>{
+          if (!COLORS[name]) missing.push(name);
+        });
+
+        const groups = [rule.good, rule.bad, rule.meh].filter(Boolean);
+        groups.forEach(list => {
+          list.forEach(item => {
+            if (!COLORS[item.color]) missing.push(item.color);
+          });
+        });
+      });
+
+      if (missing.length){
+        const unique = [...new Set(missing)];
+        console.warn("RULES에 정의된 색이 COLORS에 없습니다:", unique);
+      }
+    }
 
     // =========================================================
-    // 4) 온보딩 설명(hover tooltip)
+    // 대비 계산
     // =========================================================
+    function hexToRgb(hex){
+      const h = hex.replace("#","").trim();
+      const full = h.length===3 ? h.split("").map(c=>c+c).join("") : h;
+      const n = parseInt(full, 16);
+      return { r:(n>>16)&255, g:(n>>8)&255, b:n&255 };
+    }
+    function relLuminance(hex){
+      const {r,g,b} = hexToRgb(hex);
+      const srgb = [r,g,b].map(v=>{
+        const c = v/255;
+        return c<=0.03928 ? c/12.92 : Math.pow((c+0.055)/1.055, 2.4);
+      });
+      return 0.2126*srgb[0] + 0.7152*srgb[1] + 0.0722*srgb[2];
+    }
+    function isDark(hex){ return relLuminance(hex) < 0.42; }
+
+    function chipStyle(hex){
+      const dark = isDark(hex);
+      return {
+        text: dark ? "rgba(255,255,255,.94)" : "rgba(15,23,42,.92)",
+        border: dark ? "rgba(255,255,255,.22)" : "rgba(15,23,42,.14)",
+        markBg: "rgba(255,255,255,.92)",
+        bgTop: hex,
+        bgBottom: hex + "cc"
+      };
+    }
+
+    function getEduKey(pantsName, shirtName, grade){
+      // 기본값: contrast
+      const pantsHex = COLORS[pantsName] ? COLORS[pantsName].hex : null;
+      const shirtHex = COLORS[shirtName] ? COLORS[shirtName].hex : null;
+      if (!pantsHex || !shirtHex) return "contrast";
+
+      const pantsDark = isDark(pantsHex);
+      const shirtDark = isDark(shirtHex);
+
+      // 1) 밝기 대비: 하의 어두움 + 상의 밝음 또는 하의 밝음 + 상의 어두움
+      if (pantsDark !== shirtDark) return "contrast";
+
+      // 2) 실패 회피: 둘 다 어두우면(답답해 보일 확률) + 비추/그닥일 때만
+      if ((grade === "비추" || grade === "그닥") && pantsDark && shirtDark) return "avoid";
+
+      // 3) 포인트 배치: 둘 다 밝은데 노란색/핑크 같이 눈에 띄는 상의면 포인트로 처리
+      if (!pantsDark && !shirtDark && (shirtName === "노란색" || shirtName === "핑크")) return "point";
+
+      // 4) 색 계열 통일: 나머지는 harmony
+      return "harmony";
+    }
+
+    function getStyleLine(selectedTopType){
+      if (!selectedTopType) return "";
+      return STYLE_LINE[selectedTopType] || "";
+    }
+
+    function findEduKeyFromCases(pantsName, shirtName){
+      for (var i=0;i<EDU_CASES.length;i++){
+        var c = EDU_CASES[i];
+        if (c.pants === pantsName && c.shirt === shirtName) return c.eduKey;
+      }
+      return null;
+    }
+
+    function caseWeight(pantsName, shirtName){
+      for (var i=0;i<EDU_CASES.length;i++){
+        var c = EDU_CASES[i];
+        if (c.pants === pantsName && c.shirt === shirtName) return c.weight || 1;
+      }
+      return 0;
+    }
+
+    function badWeight(pantsName, shirtName){
+      for (var i=0;i<EDU_BAD_CASES.length;i++){
+        var c = EDU_BAD_CASES[i];
+        if (c.pants === pantsName && c.shirt === shirtName) return c.weight || 1;
+      }
+      return 0;
+    }
+
+    function clamp(n,a,b){ return Math.max(a, Math.min(b,n)); }
+
+    function scoreShirtForPants(pantsName, shirtName, ctx){
+      // ctx: { topType, bottomFit }
+      let s = 0;
+
+      // 그룹 선호(기존 로직 재사용)
+      s += (shirtBaseScore(shirtName, pantsName) || 0) * 2;
+
+      // 명시 Good 케이스 가점
+      s += (caseWeight(pantsName, shirtName) || 0) * 3;
+
+      // 명시 Bad 케이스 감점
+      s -= (badWeight(pantsName, shirtName) || 0) * 5;
+
+      // 명도 대비(안전 조합)
+      const pHex = colorHexSafe(pantsName);
+      const tHex = colorHexSafe(shirtName);
+      const pDark = isDark(pHex);
+      const tDark = isDark(tHex);
+      if (pDark !== tDark) s += 3; else s -= 1;
+      if (pDark && tDark) s -= 2;
+
+      // 상의 종류별 부스트/페널티
+      if (ctx && ctx.topType){
+        if (ctx.topType === "셔츠"){
+          if (shirtName === "흰색" || shirtName === "파란색") s += 2;
+        } else if (ctx.topType === "후드" || ctx.topType === "맨투맨"){
+          if (shirtName === "차콜" || shirtName === "베이지") s += 2;
+          if (shirtName === "노란색" || shirtName === "핑크") s -= 1;
+        } else if (ctx.topType === "니트"){
+          if (shirtName === "흰색" || shirtName === "베이지" || shirtName === "아이보리" || shirtName === "크림") s += 2;
+          if (shirtName === "노란색" || shirtName === "핑크" || shirtName === "녹색") s -= 1;
+        }
+      }
+
+      // 핏 옵션(보수적)
+      if (ctx && ctx.bottomFit === "와이드" && pDark && tDark) s -= 1;
+
+      return s;
+    }
+
+    function gradeFromScore(score){
+      if (score >= 8) return "강추";
+      if (score >= 4) return "괜찮음";
+      if (score >= 1) return "그닥";
+      return "비추";
+    }
+
+    function generateRecommendations(pantsName, ctx){
+      const all = Object.keys(COLORS).filter(hasColor);
+
+      const scored = all.map(shirtName => {
+        const score = scoreShirtForPants(pantsName, shirtName, ctx);
+        const grade = gradeFromScore(score);
+        return { color: shirtName, score, grade };
+      }).sort((a,b)=> b.score - a.score);
+
+      const goodPool = scored.filter(x => x.grade === "강추" || x.grade === "괜찮음");
+      const good = goodPool.slice(0, 2).map(x => ({ color:x.color, grade:x.grade }));
+
+      const badPool = scored.slice().reverse().filter(x => x.grade === "비추" || x.grade === "그닥");
+      const bad = badPool.slice(0, 2).map(x => ({ color:x.color, grade:x.grade }));
+
+      const used = new Set([...good.map(x=>x.color), ...bad.map(x=>x.color)]);
+      const mehPool = scored.filter(x => !used.has(x.color) && (x.grade === "그닥" || x.grade === "괜찮음"));
+      const meh = mehPool.slice(0, 2).map(x => ({ color:x.color, grade:x.grade }));
+
+      // good이 부족하면 상위권에서 보충(grade는 괜찮음으로 강제)
+      if (good.length < 2){
+        const extra = scored.filter(x=>!used.has(x.color)).slice(0, 2-good.length)
+          .map(x=>({ color:x.color, grade:"괜찮음" }));
+        good.push(...extra);
+      }
+
+      return { good, bad, meh };
+    }
+
+    // =========================================================
+    // 캔버스 합성 렌더
+    // =========================================================
+    const ASSETS = {
+      tops: {
+        "셔츠": {
+          base: "./assets/top_shirt_base.png",
+          shade: "./assets/top_shirt_shade.png"
+        },
+        "맨투맨": {
+          base: "./assets/top_sweatshirt_base.png",
+          shade: "./assets/top_sweatshirt_shade.png"
+        },
+        "후드": {
+          base: "./assets/top_hoodie_base.png",
+          shade: "./assets/top_hoodie_shade.png"
+        },
+        "니트": {
+          base: "./assets/top_knit_base.png",
+          shade: "./assets/top_knit_shade.png"
+        }
+      },
+      pants: {
+        "슬림": {
+          base: "./assets/pants_slim_base.png",
+          shade: "./assets/pants_slim_shade.png"
+        },
+        "레귤러": {
+          base: "./assets/pants_regular_base.png",
+          shade: "./assets/pants_regular_shade.png"
+        },
+        "와이드": {
+          base: "./assets/pants_wide_base.png",
+          shade: "./assets/pants_wide_shade.png"
+        }
+      }
+    };
+
+    function loadImage(src){
+      return new Promise((resolve, reject)=>{
+        const img = new Image();
+        let triedNoQuery = false;
+        img.onload = ()=> resolve(img);
+        img.onerror = ()=>{
+          console.error("image load failed", src);
+          if (!triedNoQuery){
+            triedNoQuery = true;
+            img.src = src; // retry without cache buster
+            return;
+          }
+          reject({ src: src });
+        };
+        img.src = src + "?v=" + Date.now();
+      });
+    }
+
+    function alphaBoundingBox(img, alphaMin){
+      const w = img.naturalWidth || img.width;
+      const h = img.naturalHeight || img.height;
+      if (!w || !h) return { empty:true, w:0, h:0, minX:0, minY:0, maxX:0, maxY:0 };
+      const threshold = typeof alphaMin === "number" ? alphaMin : 8;
+      const c = document.createElement("canvas");
+      c.width = w;
+      c.height = h;
+      const ctx = c.getContext("2d");
+      ctx.drawImage(img, 0, 0);
+      let data;
+      try{
+        data = ctx.getImageData(0, 0, w, h).data;
+      }catch(e){
+        return { empty:false, w, h, minX:0, minY:0, maxX:w-1, maxY:h-1 };
+      }
+      let minX = w, minY = h, maxX = -1, maxY = -1;
+      for (let y = 0; y < h; y++){
+        let rowHas = false;
+        const rowIdx = y * w * 4;
+        for (let x = 0; x < w; x++){
+          const a = data[rowIdx + x * 4 + 3];
+          if (a >= threshold){
+            if (x < minX) minX = x;
+            if (x > maxX) maxX = x;
+            rowHas = true;
+          }
+        }
+        if (rowHas){
+          if (y < minY) minY = y;
+          if (y > maxY) maxY = y;
+        }
+      }
+      if (maxX < 0 || maxY < 0){
+        return { empty:true, w:0, h:0, minX:0, minY:0, maxX:0, maxY:0 };
+      }
+      return { empty:false, w: maxX - minX + 1, h: maxY - minY + 1, minX, minY, maxX, maxY };
+    }
+
+    function alphaRowWidth(img, y, alphaMin){
+      const w = img.naturalWidth || img.width;
+      const h = img.naturalHeight || img.height;
+      if (!w || !h) return 0;
+      const row = Math.max(0, Math.min(h - 1, Math.round(y)));
+      const threshold = typeof alphaMin === "number" ? alphaMin : 8;
+      const c = document.createElement("canvas");
+      c.width = w;
+      c.height = h;
+      const ctx = c.getContext("2d");
+      ctx.drawImage(img, 0, 0);
+      let data;
+      try{
+        data = ctx.getImageData(0, row, w, 1).data;
+      }catch(e){
+        return 0;
+      }
+      let minX = w, maxX = -1;
+      for (let x = 0; x < w; x++){
+        const a = data[x * 4 + 3];
+        if (a >= threshold){
+          if (x < minX) minX = x;
+          if (x > maxX) maxX = x;
+        }
+      }
+      if (maxX < 0) return 0;
+      return maxX - minX + 1;
+    }
+
+    function alphaRowWidthAtCenter(img, y, centerX, alphaMin){
+      const w = img.naturalWidth || img.width;
+      const h = img.naturalHeight || img.height;
+      if (!w || !h) return 0;
+      const row = Math.max(0, Math.min(h - 1, Math.round(y)));
+      const cx = Math.max(0, Math.min(w - 1, Math.round(centerX)));
+      const threshold = typeof alphaMin === "number" ? alphaMin : 8;
+      const c = document.createElement("canvas");
+      c.width = w;
+      c.height = h;
+      const ctx = c.getContext("2d");
+      ctx.drawImage(img, 0, 0);
+      let data;
+      try{
+        data = ctx.getImageData(0, row, w, 1).data;
+      }catch(e){
+        return 0;
+      }
+      const segments = [];
+      let inSeg = false;
+      let segStart = 0;
+      for (let x = 0; x < w; x++){
+        const a = data[x * 4 + 3];
+        if (a >= threshold){
+          if (!inSeg){
+            inSeg = true;
+            segStart = x;
+          }
+        }else if (inSeg){
+          segments.push({ start: segStart, end: x - 1 });
+          inSeg = false;
+        }
+      }
+      if (inSeg) segments.push({ start: segStart, end: w - 1 });
+      if (!segments.length) return 0;
+
+      let chosen = null;
+      for (const seg of segments){
+        if (cx >= seg.start && cx <= seg.end){
+          chosen = seg;
+          break;
+        }
+      }
+      if (!chosen){
+        let best = null;
+        let bestDist = Infinity;
+        for (const seg of segments){
+          const segCenter = (seg.start + seg.end) / 2;
+          const dist = Math.abs(segCenter - cx);
+          if (dist < bestDist){
+            bestDist = dist;
+            best = seg;
+          }
+        }
+        chosen = best;
+      }
+      return chosen ? (chosen.end - chosen.start + 1) : 0;
+    }
+
+    function alphaBottomAtCenterBand(img, bbox, bandRatio, alphaMin){
+      const w = img.naturalWidth || img.width;
+      const h = img.naturalHeight || img.height;
+      if (!w || !h) return bbox.maxY;
+      const threshold = typeof alphaMin === "number" ? alphaMin : 8;
+      const c = document.createElement("canvas");
+      c.width = w;
+      c.height = h;
+      const ctx = c.getContext("2d");
+      ctx.drawImage(img, 0, 0);
+      let data;
+      try{
+        data = ctx.getImageData(0, 0, w, h).data;
+      }catch(e){
+        return bbox.maxY;
+      }
+      const cx = (bbox.minX + bbox.maxX) / 2;
+      const halfBand = Math.max(1, (bbox.w * (bandRatio || 0.35)) / 2);
+      const x0 = Math.max(0, Math.floor(cx - halfBand));
+      const x1 = Math.min(w - 1, Math.floor(cx + halfBand));
+      for (let y = Math.min(h - 1, bbox.maxY); y >= Math.max(0, bbox.minY); y--){
+        const rowIdx = y * w * 4;
+        for (let x = x0; x <= x1; x++){
+          const a = data[rowIdx + x * 4 + 3];
+          if (a >= threshold) return y;
+        }
+      }
+      return bbox.maxY;
+    }
+
+    function alphaTopAtCenterBand(img, bbox, bandRatio, alphaMin){
+      const w = img.naturalWidth || img.width;
+      const h = img.naturalHeight || img.height;
+      if (!w || !h) return bbox.minY;
+      const threshold = typeof alphaMin === "number" ? alphaMin : 8;
+      const c = document.createElement("canvas");
+      c.width = w;
+      c.height = h;
+      const ctx = c.getContext("2d");
+      ctx.drawImage(img, 0, 0);
+      let data;
+      try{
+        data = ctx.getImageData(0, 0, w, h).data;
+      }catch(e){
+        return bbox.minY;
+      }
+      const cx = (bbox.minX + bbox.maxX) / 2;
+      const halfBand = Math.max(1, (bbox.w * (bandRatio || 0.35)) / 2);
+      const x0 = Math.max(0, Math.floor(cx - halfBand));
+      const x1 = Math.min(w - 1, Math.floor(cx + halfBand));
+      for (let y = Math.max(0, bbox.minY); y <= Math.min(h - 1, bbox.maxY); y++){
+        const rowIdx = y * w * 4;
+        for (let x = x0; x <= x1; x++){
+          const a = data[rowIdx + x * 4 + 3];
+          if (a >= threshold) return y;
+        }
+      }
+      return bbox.minY;
+    }
+
+    function safeBBox(bbox, img){
+      if (bbox && !bbox.empty && bbox.w > 0 && bbox.h > 0) return bbox;
+      const w = img.naturalWidth || img.width || 1;
+      const h = img.naturalHeight || img.height || 1;
+      return { empty:false, w, h, minX:0, minY:0, maxX:w-1, maxY:h-1 };
+    }
+
+    function pickMask(baseImg, shadeImg){
+      const baseBox = alphaBoundingBox(baseImg, 8);
+      if (baseBox && !baseBox.empty && baseBox.w > 0 && baseBox.h > 0){
+        return { mask: baseImg, bbox: baseBox, preferShade: false };
+      }
+      const shadeBox = alphaBoundingBox(shadeImg, 24);
+      if (shadeBox && !shadeBox.empty && shadeBox.w > 0 && shadeBox.h > 0){
+        return { mask: shadeImg, bbox: shadeBox, preferShade: true };
+      }
+      return { mask: baseImg, bbox: safeBBox(baseBox, baseImg), preferShade: false };
+    }
+
+    function fitRect(bbox, dstX, dstY, dstW, dstH){
+      const srcW = Math.max(1, bbox.w);
+      const srcH = Math.max(1, bbox.h);
+      const scale = Math.min(dstW / srcW, dstH / srcH);
+      const drawW = srcW * scale;
+      const drawH = srcH * scale;
+      const drawX = dstX + (dstW - drawW) / 2 - bbox.minX * scale;
+      const drawY = dstY + (dstH - drawH) / 2 - bbox.minY * scale;
+      return { x: drawX, y: drawY, w: drawW, h: drawH, scale };
+    }
+
+    function fitRectCentered(bbox, dstX, dstY, dstW, dstH){
+      const srcW = Math.max(1, bbox.w);
+      const srcH = Math.max(1, bbox.h);
+      const scale = Math.min(dstW / srcW, dstH / srcH);
+      const drawW = srcW * scale;
+      const drawH = srcH * scale;
+      const drawX = dstX + (dstW - drawW) / 2;
+      const drawY = dstY + (dstH - drawH) / 2;
+      return { x: drawX, y: drawY, w: drawW, h: drawH, scale };
+    }
+
+    /* ===========================
+       FIX 1) alphaBoundingBox 결과(minX/minY...)용 fit 함수 추가
+       =========================== */
+    function fitFromAlphaBBoxCentered(bbox, imgW, imgH, scale, centerX, centerY){
+      // bbox: {minX,minY,maxX,maxY,w,h}
+      const fullW = Math.max(1, imgW || bbox.w);
+      const fullH = Math.max(1, imgH || bbox.h);
+      const drawW = fullW * scale;
+      const drawH = fullH * scale;
+
+      // bbox의 "콘텐츠 중심"(min/max 기반)을 center에 맞추기
+      const contentCx = (bbox.minX + bbox.maxX) / 2;
+      const contentCy = (bbox.minY + bbox.maxY) / 2;
+
+      const drawX = centerX - contentCx * scale;
+      const drawY = centerY - contentCy * scale;
+
+      return { x: drawX, y: drawY, w: drawW, h: drawH, scale };
+    }
+
+    /* ===========================
+       FIX 2) 허리선 앵커(비율)로 정렬: 자산별로 튜닝 가능
+       - 값은 0~1 (bbox 높이 기준)
+       =========================== */
+    const WAIST_ANCHOR = {
+      tops: {        // 상의: bbox의 위에서부터 어느 지점이 "허리선"인가
+        "셔츠": 0.74,
+        "맨투맨": 0.78,
+        "후드": 0.79,
+        "니트": 0.78
+      },
+      pants: {       // 하의: bbox의 위에서부터 어느 지점이 "허리선"인가
+        "슬림": 0.12,
+        "레귤러": 0.12,
+        "와이드": 0.11
+      }
+    };
+
+    // =========================================================
+    // App
+    // =========================================================
+    const App = {
+      state: {
+        selectedPants: null,
+        selectedShirt: null,
+        selectedGrade: null,
+        selectedBottomFit: "슬림",
+        selectedTopType: "니트",
+        pantsColor: "#3A3C43",
+        topColor: "#9CA3AF",
+        reduceMotion: window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches
+      },
+
+      el: {},
+      tmp: { c1:null, c2:null, ctx1:null, ctx2:null, w:0, h:0 },
+
+      async init(){
+        this.cacheEls();
+        this.bindStatic();
+        this.setupIcons();
+        this.makePantsButtons();
+        this.makeBottomFitButtons();
+        this.makeTopTypeButtons();
+        await this.loadAssets();
+        this.setNeedsPants(true);
+
+        this.el.goodChips.innerHTML = `<div class="muted">하의 색을 먼저 선택하세요.</div>`;
+        this.el.badChips.innerHTML  = `<div class="muted">하의 색을 먼저 선택하세요.</div>`;
+        this.el.mehChips.innerHTML  = `<div class="muted">하의 색을 먼저 선택하세요.</div>`;
+
+        validateRules();
+      },
+
+      cacheEls(){
+        this.el = {
+          outfitCanvas: document.getElementById("outfitCanvas"),
+          pantsButtons: document.getElementById("pantsButtons"),
+          bottomFitButtons: document.getElementById("bottomFitButtons"),
+          topTypeButtons: document.getElementById("topTypeButtons"),
+          goodChips: document.getElementById("goodChips"),
+          badChips: document.getElementById("badChips"),
+          mehChips: document.getElementById("mehChips"),
+          statePill: document.getElementById("statePill"),
+          shirtPill: document.getElementById("shirtPill"),
+          fitPill: document.getElementById("fitPill"),
+          topTypePill: document.getElementById("topTypePill"),
+          statusCallout: document.getElementById("statusCallout"),
+          errorBanner: document.getElementById("errorBanner"),
+          pantsPickBanner: document.getElementById("pantsPickBanner"),
+          btnFocusPants: document.getElementById("btnFocusPants"),
+          pantsTitle: document.getElementById("pantsTitle"),
+          rightPanel: document.getElementById("rightPanel"),
+          btnBoom: document.getElementById("btnBoom"),
+          toast: document.getElementById("toast"),
+          fxCanvas: document.getElementById("fxCanvas"),
+          legendHeart: document.getElementById("legendHeart"),
+          legendCircle: document.getElementById("legendCircle"),
+          legendTriangle: document.getElementById("legendTriangle"),
+          legendX: document.getElementById("legendX")
+        };
+      },
+
+      bindStatic(){
+        this.el.btnFocusPants.addEventListener("click", ()=>{
+          this.el.pantsTitle.scrollIntoView({ behavior:"smooth", block:"center" });
+          const firstBtn = this.el.pantsButtons.querySelector("button");
+          if (firstBtn) firstBtn.focus({ preventScroll:true });
+        });
+
+        this.el.btnBoom.addEventListener("click", ()=>{
+          if(!this.state.selectedPants){
+            this.showToast(STRINGS.toast.needPantsForBoom);
+            this.el.statusCallout.textContent = STRINGS.callout.needPantsShort;
+            this.setNeedsPants(true);
+            return;
+          }
+          this.fireworks();
+          this.playPop();
+          this.showToast(STRINGS.toast.fireworks);
+        });
+
+        if (this.el.fxCanvas){
+          this.fxCtx = this.el.fxCanvas.getContext("2d");
+          this.fitFxCanvas();
+          window.addEventListener("resize", ()=> this.fitFxCanvas());
+        }
+      },
+
+      setupIcons(){
+        this.el.legendHeart.src = ICON.heart;
+        this.el.legendCircle.src = ICON.circle;
+        this.el.legendTriangle.src = ICON.triangle;
+        this.el.legendX.src = ICON.x;
+      },
+
+      async loadAssets(){
+        try{
+          this.assets = { tops:{}, pants:{} };
+          const topTypes = Object.keys(ASSETS.tops);
+          const pantFits = Object.keys(ASSETS.pants);
+          for (const t of topTypes){
+            const base = await loadImage(ASSETS.tops[t].base);
+            const shade = await loadImage(ASSETS.tops[t].shade);
+            this.assets.tops[t] = { base, shade };
+          }
+          for (const p of pantFits){
+            const base = await loadImage(ASSETS.pants[p].base);
+            const shade = await loadImage(ASSETS.pants[p].shade);
+            this.assets.pants[p] = { base, shade };
+          }
+
+          const sizeErrors = [];
+          topTypes.forEach(t=>{
+            const b = this.assets.tops[t].base;
+            const s = this.assets.tops[t].shade;
+            if (b.naturalWidth !== s.naturalWidth || b.naturalHeight !== s.naturalHeight){
+              sizeErrors.push(`top_${t}=${b.naturalWidth}x${b.naturalHeight}/${s.naturalWidth}x${s.naturalHeight}`);
+            }
+          });
+          pantFits.forEach(p=>{
+            const b = this.assets.pants[p].base;
+            const s = this.assets.pants[p].shade;
+            if (b.naturalWidth !== s.naturalWidth || b.naturalHeight !== s.naturalHeight){
+              sizeErrors.push(`pants_${p}=${b.naturalWidth}x${b.naturalHeight}/${s.naturalWidth}x${s.naturalHeight}`);
+            }
+          });
+          if (sizeErrors.length){
+            const detail = sizeErrors.join(", ");
+            console.error("image size mismatch", detail);
+            this.assetsReady = false;
+            this.state.loadError = true;
+            if (this.el && this.el.statusCallout){
+              this.el.statusCallout.textContent = "이미지 크기 불일치: " + detail;
+            }
+            if (this.el && this.el.errorBanner){
+              this.el.errorBanner.textContent = "이미지 크기 불일치: " + detail;
+              this.el.errorBanner.style.display = "block";
+            }
+            return;
+          }
+
+          this.assetMeta = { tops:{}, pants:{} };
+          topTypes.forEach(t=>{
+            const pair = this.assets.tops[t];
+            const m = pickMask(pair.base, pair.shade);
+            this.assetMeta.tops[t] = { ...pair, mask: m.mask, bbox: m.bbox, shadeAsMask: !!m.preferShade };
+          });
+          pantFits.forEach(p=>{
+            const pair = this.assets.pants[p];
+            const m = pickMask(pair.base, pair.shade);
+            this.assetMeta.pants[p] = { ...pair, mask: m.mask, bbox: m.bbox, shadeAsMask: !!m.preferShade };
+          });
+
+          this.assetsReady = true;
+          if (this.el && this.el.errorBanner){
+            this.el.errorBanner.style.display = "none";
+          }
+          this.setCanvasSize();
+          window.addEventListener("resize", ()=> this.setCanvasSize());
+        }catch(e){
+          this.assetsReady = false;
+          this.state.loadError = true;
+          if (this.el && this.el.statusCallout){
+            const badSrc = (e && e.src) ? e.src : String(e);
+            this.el.statusCallout.textContent = "이미지 로드 실패: " + badSrc;
+          }
+          if (this.el && this.el.errorBanner){
+            const badSrc = (e && e.src) ? e.src : String(e);
+            this.el.errorBanner.textContent = "이미지 로드 실패: " + badSrc;
+            this.el.errorBanner.style.display = "block";
+          }
+        }
+      },
+
+      setCanvasSize(){
+        const canvas = this.el.outfitCanvas;
+        if (!canvas) return;
+        const dpr = window.devicePixelRatio || 1;
+        const rect = canvas.getBoundingClientRect();
+        const parentW = canvas.parentElement ? canvas.parentElement.getBoundingClientRect().width : 0;
+        const cssW = rect.width || parentW || 360;
+        const ratio = 0.92;
+        const cssH = Math.max(320, Math.round(cssW * ratio));
+        canvas.style.height = cssH + "px";
+        canvas.width = Math.max(1, Math.floor(cssW * dpr));
+        canvas.height = Math.max(1, Math.floor(cssH * dpr));
+        const ctx = canvas.getContext("2d");
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        this.canvasCssW = cssW;
+        this.canvasCssH = cssH;
+        this.renderOutfit();
+      },
+
+      renderIfReady(){
+        if (this.assetsReady) this.renderOutfit();
+      },
+
+      ensureTmpCanvases(w,h){
+        if (!this.tmp) this.tmp = { c1:null,c2:null,ctx1:null,ctx2:null,w:0,h:0 };
+        if (!this.tmp.c1 || !this.tmp.c2){
+          this.tmp.c1 = document.createElement("canvas");
+          this.tmp.c2 = document.createElement("canvas");
+          this.tmp.ctx1 = this.tmp.c1.getContext("2d");
+          this.tmp.ctx2 = this.tmp.c2.getContext("2d");
+        }
+        const W = Math.max(1, Math.floor(w));
+        const H = Math.max(1, Math.floor(h));
+        if (this.tmp.w !== W || this.tmp.h !== H){
+          this.tmp.w = W; this.tmp.h = H;
+          this.tmp.c1.width = W; this.tmp.c1.height = H;
+          this.tmp.c2.width = W; this.tmp.c2.height = H;
+        }
+      },
+
+      renderOutfit(){
+        const canvas = this.el.outfitCanvas;
+        if (!canvas || !this.assetsReady) return;
+
+        const ctx = canvas.getContext("2d");
+        const dpr = window.devicePixelRatio || 1;
+        const w = this.canvasCssW || (canvas.width / dpr);
+        const h = this.canvasCssH || (canvas.height / dpr);
+        this.ensureTmpCanvases(w, h);
+
+        ctx.clearRect(0, 0, w, h);
+
+        const topColor = this.state.topColor || "#9CA3AF";
+        const pantsColor = this.state.pantsColor || "#3A3C43";
+
+        const topKey = this.state.selectedTopType || "니트";
+        const pantsKey = this.state.selectedBottomFit || "슬림";
+
+        const topMeta = this.assetMeta?.tops?.[topKey];
+        const pantsMeta = this.assetMeta?.pants?.[pantsKey];
+        if (!topMeta || !pantsMeta) return;
+
+        const maskTop = topMeta.mask || topMeta.base;
+        const maskPants = pantsMeta.mask || pantsMeta.base;
+
+        const bboxTop = safeBBox(topMeta.bbox || alphaBoundingBox(maskTop, 8), maskTop);
+        const bboxPants = safeBBox(pantsMeta.bbox || alphaBoundingBox(maskPants, 8), maskPants);
+
+        // 1) 허리 폭 기준으로 스케일 (상의 허리 폭을 목표로, 하의는 상의와 맞춤)
+        const topAnchor = (WAIST_ANCHOR.tops[topKey] ?? 0.78);
+        const pantsAnchor = (WAIST_ANCHOR.pants[pantsKey] ?? 0.12);
+
+        const topWaistRow = bboxTop.minY + bboxTop.h * topAnchor;
+        const pantsWaistRow = bboxPants.minY + bboxPants.h * pantsAnchor;
+
+        const topCenterX = (bboxTop.minX + bboxTop.maxX) / 2;
+        const pantsCenterX = (bboxPants.minX + bboxPants.maxX) / 2;
+
+        const topWaistRaw = alphaRowWidthAtCenter(maskTop, topWaistRow, topCenterX, 8) || bboxTop.w;
+        const pantsWaistRaw = alphaRowWidthAtCenter(maskPants, pantsWaistRow, pantsCenterX, 8) || bboxPants.w;
+
+        const targetWaistWidth = w * 0.66;
+
+        const topScale0 = targetWaistWidth / Math.max(1, topWaistRaw);
+        const pantsScale0 = topScale0 * (topWaistRaw / Math.max(1, pantsWaistRaw));
+
+        // 2) 중앙 배치
+        const topFit = fitFromAlphaBBoxCentered(
+          bboxTop,
+          maskTop.naturalWidth || maskTop.width,
+          maskTop.naturalHeight || maskTop.height,
+          topScale0,
+          w * 0.5,
+          h * 0.33
+        );
+        const pantsFit = fitFromAlphaBBoxCentered(
+          bboxPants,
+          maskPants.naturalWidth || maskPants.width,
+          maskPants.naturalHeight || maskPants.height,
+          pantsScale0,
+          w * 0.5,
+          h * 0.72
+        );
+
+        // 3) 상의 밑단(팔 제외 중앙 밴드)과 하의 상단을 맞춤
+        const gapPx = -20;
+        const topHemRow = alphaBottomAtCenterBand(maskTop, bboxTop, 0.35, 8);
+        const pantsTopRow = alphaTopAtCenterBand(maskPants, bboxPants, 0.35, 8);
+        const topHemY = topFit.y + topHemRow * topFit.scale;
+        const pantsTopY = pantsFit.y + pantsTopRow * pantsFit.scale;
+        pantsFit.y += (topHemY + gapPx - pantsTopY);
+
+        // 4) 상하 전체 그룹이 캔버스를 꽉 채우도록 확대 (기존 0.88 → 0.95 권장)
+        const topMinY   = topFit.y   + bboxTop.minY   * topFit.scale;
+        const topMaxY   = topFit.y   + bboxTop.maxY   * topFit.scale;
+        const pantsMinY = pantsFit.y + bboxPants.minY * pantsFit.scale;
+        const pantsMaxY = pantsFit.y + bboxPants.maxY * pantsFit.scale;
+
+        const groupMinY = Math.min(topMinY, pantsMinY);
+        const groupMaxY = Math.max(topMaxY, pantsMaxY);
+        const groupH = Math.max(1, groupMaxY - groupMinY);
+
+        const targetGroupH = h * 0.95;
+        const scaleUp = targetGroupH / groupH;
+        const scaleFit = h / groupH;
+        const finalScale = Math.min(scaleUp, scaleFit);
+
+        const groupCenterX = w * 0.5;
+        const groupCenterY = h * 0.5;
+
+        const scaleAbout = (fit)=>{
+          fit.x = groupCenterX + (fit.x - groupCenterX) * finalScale;
+          fit.y = groupCenterY + (fit.y - groupCenterY) * finalScale;
+          fit.w *= finalScale;
+          fit.h *= finalScale;
+          fit.scale *= finalScale;
+        };
+        scaleAbout(topFit);
+        scaleAbout(pantsFit);
+
+        // 5) 세로 범위 내로 보정(잘림 방지)
+        const topMinY2   = topFit.y   + bboxTop.minY   * topFit.scale;
+        const topMaxY2   = topFit.y   + bboxTop.maxY   * topFit.scale;
+        const pantsMinY2 = pantsFit.y + bboxPants.minY * pantsFit.scale;
+        const pantsMaxY2 = pantsFit.y + bboxPants.maxY * pantsFit.scale;
+        let shiftY = 0;
+        const groupMinY2 = Math.min(topMinY2, pantsMinY2);
+        const groupMaxY2 = Math.max(topMaxY2, pantsMaxY2);
+        if (groupMinY2 < 0) shiftY = -groupMinY2;
+        if (groupMaxY2 + shiftY > h) shiftY -= (groupMaxY2 + shiftY - h);
+        if (shiftY){
+          topFit.y += shiftY;
+          pantsFit.y += shiftY;
+        }
+
+        // 6) draw helper는 기존 로직 유지
+        const drawTinted = (maskImg, shadeImg, colorHex, fit, shadeAsMask) => {
+          const tmp = this.tmp.c2;
+          const t = this.tmp.ctx2;
+
+          t.clearRect(0, 0, w, h);
+          t.globalAlpha = 1;
+          t.globalCompositeOperation = "source-over";
+          t.drawImage(maskImg, fit.x, fit.y, fit.w, fit.h);
+
+          t.globalCompositeOperation = "source-in";
+          t.fillStyle = colorHex;
+          t.fillRect(0, 0, w, h);
+
+          if (shadeAsMask){
+            t.globalCompositeOperation = "multiply";
+            t.drawImage(shadeImg, fit.x, fit.y, fit.w, fit.h);
+            t.globalCompositeOperation = "source-over";
+            t.globalAlpha = 0.55;
+            t.drawImage(shadeImg, fit.x, fit.y, fit.w, fit.h);
+            t.globalAlpha = 1;
+          }else{
+            t.globalCompositeOperation = "source-over";
+            t.drawImage(shadeImg, fit.x, fit.y, fit.w, fit.h);
+          }
+
+          ctx.globalCompositeOperation = "source-over";
+          ctx.drawImage(tmp, 0, 0, w, h);
+        };
+
+        const drawUnderlay = (maskImg, fit, color) => {
+          const tmp = this.tmp.c1;
+          const t = this.tmp.ctx1;
+
+          t.clearRect(0, 0, w, h);
+          t.globalAlpha = 1;
+          t.globalCompositeOperation = "source-over";
+          t.drawImage(maskImg, fit.x, fit.y, fit.w, fit.h);
+          t.globalCompositeOperation = "source-in";
+          t.fillStyle = color;
+          t.fillRect(0, 0, w, h);
+
+          ctx.globalCompositeOperation = "source-over";
+          ctx.drawImage(tmp, 0, 0, w, h);
+        };
+
+        const underlay = "rgba(148,163,184,0.55)";
+        drawUnderlay(maskPants, pantsFit, underlay);
+        drawUnderlay(maskTop, topFit, underlay);
+        drawTinted(maskPants, pantsMeta.shade, pantsColor, pantsFit, pantsMeta.shadeAsMask);
+        drawTinted(maskTop, topMeta.shade, topColor, topFit, topMeta.shadeAsMask);
+      },
+
+      showToast(msg){
+        this.el.toast.textContent = msg;
+        this.el.toast.classList.add("show");
+        clearTimeout(this.toastTimer);
+        this.toastTimer = setTimeout(()=> this.el.toast.classList.remove("show"), 1400);
+      },
+
+      setNeedsPants(on){
+        if (on){
+          this.el.pantsPickBanner.classList.add("show");
+          this.el.pantsButtons.classList.add("attention");
+          this.el.rightPanel.classList.add("needsPants");
+          this.showToast(STRINGS.toast.needPants);
+        }else{
+          this.el.pantsPickBanner.classList.remove("show");
+          this.el.pantsButtons.classList.remove("attention");
+          this.el.rightPanel.classList.remove("needsPants");
+        }
+      },
+
+      makePantsButtons(){
+        const pantsList = ["진청","흑청","연청","아이보리","크림","베이지","카키","브라운","차콜","검정"];
+        this.el.pantsButtons.innerHTML = "";
+        pantsList.forEach(name=>{
+          const b = document.createElement("button");
+          b.className = "btn";
+          b.type = "button";
+          b.setAttribute("data-color", name);
+          b.innerHTML = `<span>${name}</span><span class="swatch" style="background:${colorHexSafe(name)}"></span>`;
+          b.addEventListener("click", ()=> this.selectPants(name));
+          this.el.pantsButtons.appendChild(b);
+        });
+      },
+
+      makeBottomFitButtons(){
+        const fits = ["슬림","레귤러","와이드"];
+        this.el.bottomFitButtons.innerHTML = "";
+        fits.forEach(name=>{
+          const b = document.createElement("button");
+          b.className = "btn";
+          b.type = "button";
+          b.textContent = name;
+          if (name === this.state.selectedBottomFit) b.classList.add("selected");
+          b.addEventListener("click", ()=> this.selectBottomFit(name));
+          this.el.bottomFitButtons.appendChild(b);
+        });
+        this.el.fitPill.textContent = "하의 핏: " + this.state.selectedBottomFit;
+      },
+
+      makeTopTypeButtons(){
+        const types = ["셔츠","맨투맨","후드","니트"];
+        this.el.topTypeButtons.innerHTML = "";
+        types.forEach(name=>{
+          const b = document.createElement("button");
+          b.className = "btn";
+          b.type = "button";
+          b.textContent = name;
+          if (name === this.state.selectedTopType) b.classList.add("selected");
+          b.addEventListener("click", ()=> this.selectTopType(name));
+          this.el.topTypeButtons.appendChild(b);
+        });
+        this.el.topTypePill.textContent = "상의 종류: " + this.state.selectedTopType;
+      },
+
+      updateSelectedButtons(container, selectedText){
+        const btns = container.querySelectorAll("button");
+        btns.forEach(btn => {
+          if (btn.textContent === selectedText) btn.classList.add("selected");
+          else btn.classList.remove("selected");
+        });
+      },
+
+      refreshRecommendations(){
+        if (!this.state.selectedPants) return;
+        const ctx = { topType: this.state.selectedTopType, bottomFit: this.state.selectedBottomFit };
+        const rec = generateRecommendations(this.state.selectedPants, ctx);
+        this.renderChips(this.el.goodChips, rec.good, 2);
+        this.renderChips(this.el.badChips,  rec.bad,  2);
+        this.renderChips(this.el.mehChips,  rec.meh,  2);
+      },
+
+      renderStatusCallout(grade, colorName){
+        if (this.state.loadError) return;
+        const iconSrc = (GRADE[grade] && GRADE[grade].icon) ? GRADE[grade].icon : ICON.circle;
+        const phrase = (GRADE[grade] && GRADE[grade].phrase) ? GRADE[grade].phrase : "";
+        const bw = badWeight(this.state.selectedPants, colorName);
+        const caseKey = findEduKeyFromCases(this.state.selectedPants, colorName);
+        let eduKey;
+        if ((grade === "비추" || grade === "그닥") && bw > 0) eduKey = "avoid";
+        else if (caseKey) eduKey = caseKey;
+        else eduKey = getEduKey(this.state.selectedPants, colorName, grade);
+        const eduLine = EDU_TEXT[eduKey] || EDU_TEXT.contrast;
+        const pantsLabel = this.formatWithOption(this.state.selectedPants, this.state.selectedBottomFit);
+        const shirtLabel = this.formatWithOption(colorName, this.state.selectedTopType);
+        const styleLine = getStyleLine(this.state.selectedTopType);
+        const styleHtml = styleLine
+          ? `<div style="color: rgba(15,23,42,.70); font-size:12px; line-height:1.4;">스타일: ${styleLine}</div>`
+          : "";
+
+        this.el.statusCallout.innerHTML = `
+          <div style="display:flex; gap:10px; align-items:flex-start; flex-wrap:wrap;">
+            <span class="badgeIcon">
+              <img class="iconImg" src="${iconSrc}" alt="${grade} 아이콘" />
+              <b>${grade}</b>
+            </span>
+            <div style="display:grid; gap:4px;">
+              <div style="color: rgba(15,23,42,.86); font-size:12px; line-height:1.4;">
+                <b>${pantsLabel}</b> + <b>${shirtLabel}</b>
+              </div>
+              <div style="color: rgba(15,23,42,.70); font-size:12px; line-height:1.45;">
+                ${phrase}
+              </div>
+              <div style="color: rgba(15,23,42,.62); font-size:11px; line-height:1.35;">
+                이유: ${eduLine}
+              </div>
+              ${styleHtml}
+            </div>
+          </div>
+        `;
+      },
+
+      updateStatusCallout(){
+        if (this.state.loadError) return;
+        if (this.state.selectedPants && this.state.selectedShirt && this.state.selectedGrade){
+          this.renderStatusCallout(this.state.selectedGrade, this.state.selectedShirt);
+          return;
+        }
+        if (this.state.selectedPants && this.state.selectedShirt && !this.state.selectedGrade){
+          const pantsLabel = this.formatWithOption(this.state.selectedPants, this.state.selectedBottomFit);
+          const shirtLabel = this.formatWithOption(this.state.selectedShirt, this.state.selectedTopType);
+          const styleLine = getStyleLine(this.state.selectedTopType);
+          const styleHtml = styleLine ? `<div style="margin-top:6px; color: rgba(15,23,42,.70); font-size:12px; line-height:1.4;">스타일: ${styleLine}</div>` : "";
+          this.el.statusCallout.innerHTML =
+            `현재 <b>${pantsLabel}</b> + <b>${shirtLabel}</b> 적용 중입니다.<br/>오른쪽 추천/비추/그닥 칩을 다시 <b>클릭</b>해서 멘트를 갱신하세요.` + styleHtml;
+          return;
+        }
+        if (this.state.selectedPants){
+          const styleLine = getStyleLine(this.state.selectedTopType);
+          const styleHtml = styleLine
+            ? `<div style="margin-top:6px; color: rgba(15,23,42,.70); font-size:12px; line-height:1.4;">스타일: ${styleLine}</div>`
+            : "";
+          this.el.statusCallout.innerHTML = STRINGS.callout.pantsPicked(this.state.selectedPants) + styleHtml;
+        }
+      },
+
+      renderChips(el, items, limit){
+        el.innerHTML = "";
+        if (!this.state.selectedPants){
+          el.innerHTML = `<div class="muted">하의 색을 먼저 선택하세요.</div>`;
+          return;
+        }
+        if (!items || items.length === 0){
+          el.innerHTML = `<div class="muted">없음</div>`;
+          return;
+        }
+
+        const max = typeof limit === "number" ? limit : 2;
+        items.slice(0, max).forEach(it=>{
+          if (!hasColor(it.color)) return;
+          const hex = colorHexSafe(it.color);
+          const s = chipStyle(hex);
+
+          const c = document.createElement("div");
+          c.className = "chip";
+          c.setAttribute("role","button");
+          c.setAttribute("tabindex","0");
+
+          c.style.background = `linear-gradient(180deg, ${s.bgTop}, ${s.bgBottom})`;
+          c.style.color = s.text;
+          c.style.borderColor = s.border;
+
+          const iconSrc = (GRADE[it.grade] && GRADE[it.grade].icon) ? GRADE[it.grade].icon : ICON.circle;
+
+          c.innerHTML = `
+            <span class="mark" style="background:${s.markBg}">
+              <img src="${iconSrc}" alt="${it.grade} 아이콘"/>
+            </span>
+            <span>${it.color}</span>
+          `;
+
+          const apply = ()=> this.applyShirt(it.color, it.grade);
+          c.addEventListener("click", apply);
+          c.addEventListener("keydown", (e)=>{
+            if (e.key === "Enter" || e.key === " "){
+              e.preventDefault();
+              apply();
+            }
+          });
+
+          el.appendChild(c);
+        });
+      },
+
+      selectPants(name){
+        this.state.selectedPants = name;
+        this.el.statePill.textContent = "하의 선택: " + name;
+        this.state.pantsColor = colorHexSafe(name, this.state.pantsColor);
+        this.renderIfReady();
+        const btns = this.el.pantsButtons.querySelectorAll("button");
+        btns.forEach(btn => {
+          if (btn.getAttribute("data-color") === name) btn.classList.add("selected");
+          else btn.classList.remove("selected");
+        });
+
+        this.state.selectedShirt = null;
+        this.el.shirtPill.textContent = "상의 선택: 아직";
+
+        this.setNeedsPants(false);
+        this.refreshRecommendations();
+        this.updateStatusCallout();
+        this.showToast(STRINGS.toast.pantsSelected(name));
+      },
+
+      selectBottomFit(name){
+        this.state.selectedBottomFit = name;
+        this.el.fitPill.textContent = "하의 핏: " + name;
+        this.updateSelectedButtons(this.el.bottomFitButtons, name);
+        this.renderIfReady();
+        this.showToast(`${name} 선택 ✅`);
+        this.refreshRecommendations();
+        this.state.selectedGrade = null;
+        this.updateStatusCallout();
+      },
+
+      selectTopType(name){
+        this.state.selectedTopType = name;
+        this.el.topTypePill.textContent = "상의 종류: " + name;
+        this.updateSelectedButtons(this.el.topTypeButtons, name);
+        this.renderIfReady();
+        this.showToast(`${name} 선택 ✅`);
+        this.refreshRecommendations();
+        this.state.selectedGrade = null;
+        this.updateStatusCallout();
+      },
+
+      formatWithOption(base, opt){
+        return opt ? `${base}(${opt})` : base;
+      },
+
+      applyShirt(colorName, grade){
+        this.state.selectedShirt = colorName;
+        this.state.selectedGrade = grade;
+        this.state.topColor = colorHexSafe(colorName, this.state.topColor);
+        this.renderIfReady();
+        this.el.shirtPill.textContent = "상의 선택: " + colorName;
+        this.renderStatusCallout(grade, colorName);
+        this.showToast(STRINGS.toast.shirtApplied(colorName));
+      },
+
+      fitFxCanvas(){
+        if (!this.el.fxCanvas) return;
+        const dpr = window.devicePixelRatio || 1;
+        this.viewport = { w: window.innerWidth, h: window.innerHeight };
+        this.el.fxCanvas.width = Math.floor(this.viewport.w * dpr);
+        this.el.fxCanvas.height = Math.floor(this.viewport.h * dpr);
+        this.el.fxCanvas.style.width = this.viewport.w + "px";
+        this.el.fxCanvas.style.height = this.viewport.h + "px";
+        this.fxCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      },
+
+      rand(min, max){ return Math.random() * (max - min) + min; },
+
+      playPop(){
+        if (this.state.reduceMotion) return;
+        try{
+          if (!this.audioCtx) this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          const t0 = this.audioCtx.currentTime;
+
+          const osc = this.audioCtx.createOscillator();
+          const gain = this.audioCtx.createGain();
+          osc.type = "sine";
+          osc.frequency.setValueAtTime(520, t0);
+          osc.frequency.exponentialRampToValueAtTime(180, t0 + 0.08);
+          gain.gain.setValueAtTime(0.0001, t0);
+          gain.gain.exponentialRampToValueAtTime(0.30, t0 + 0.01);
+          gain.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.12);
+          osc.connect(gain).connect(this.audioCtx.destination);
+          osc.start(t0);
+          osc.stop(t0 + 0.14);
+
+          const bufferSize = 2 * this.audioCtx.sampleRate;
+          const noiseBuffer = this.audioCtx.createBuffer(1, bufferSize, this.audioCtx.sampleRate);
+          const output = noiseBuffer.getChannelData(0);
+          for (let i = 0; i < bufferSize; i++) output[i] = (Math.random() * 2 - 1) * 0.18;
+
+          const noise = this.audioCtx.createBufferSource();
+          noise.buffer = noiseBuffer;
+
+          const nGain = this.audioCtx.createGain();
+          nGain.gain.setValueAtTime(0.0001, t0);
+          nGain.gain.exponentialRampToValueAtTime(0.12, t0 + 0.02);
+          nGain.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.22);
+
+          const filter = this.audioCtx.createBiquadFilter();
+          filter.type = "highpass";
+          filter.frequency.setValueAtTime(900, t0);
+
+          noise.connect(filter).connect(nGain).connect(this.audioCtx.destination);
+          noise.start(t0);
+          noise.stop(t0 + 0.24);
+        }catch(e){}
+      },
+
+      fireworks(){
+        if (this.state.reduceMotion || !this.fxCtx || !this.viewport) return;
+
+        const bursts = 6;
+        const totalParticlesPerBurst = 220;
+        const gravity = 0.18;
+        const drag = 0.992;
+
+        let particles = [];
+        for (let b=0;b<bursts;b++){
+          const cx = this.rand(this.viewport.w*0.15, this.viewport.w*0.85);
+          const cy = this.rand(this.viewport.h*0.15, this.viewport.h*0.65);
+          for (let i=0;i<totalParticlesPerBurst;i++){
+            const a = this.rand(0, Math.PI*2);
+            const s = this.rand(4.5, 12.5);
+            particles.push({
+              x: cx, y: cy,
+              vx: Math.cos(a) * s,
+              vy: Math.sin(a) * s - this.rand(2, 8),
+              r: this.rand(1.8, 3.8),
+              life: this.rand(60, 115),
+              hue: this.rand(0, 360)
+            });
+          }
+        }
+
+        const tick = ()=>{
+          this.fxCtx.clearRect(0,0,this.viewport.w,this.viewport.h);
+
+          let alive = 0;
+          for (const p of particles){
+            if (p.life <= 0) continue;
+            alive++;
+
+            p.vx *= drag;
+            p.vy = p.vy * drag + gravity;
+            p.x += p.vx;
+            p.y += p.vy;
+            p.life -= 1;
+
+            const a = Math.max(0, p.life / 120);
+            this.fxCtx.globalAlpha = a;
+
+            this.fxCtx.beginPath();
+            this.fxCtx.fillStyle = `hsl(${p.hue}, 85%, 60%)`;
+            this.fxCtx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+            this.fxCtx.fill();
+          }
+
+          if (alive > 0) requestAnimationFrame(tick);
+          else this.fxCtx.clearRect(0,0,this.viewport.w,this.viewport.h);
+        };
+        requestAnimationFrame(tick);
+      },
+
+    };
+
     const NEED_DESC = {
       pantsToTop: "- 오늘 입을 바지를 고르면 어울리는 컬러를 추천해드립니다.",
-      topToPants: "- 오늘 입을 셔츠(상의) 컬러를 고르면 어울리는 하의 컬러를 추천해드립니다.",
+      topToPants: "- 오늘 입을 셔츠를 고르면 어울리는 컬러를 추천해드립니다.",
       outerToIn:  "- 오늘 입을 아우터를 고르면 안에 입을 상/하의의 컬러 매치를 추천해드립니다.\n- 현재 서비스 준비중입니다.",
       premium:    "- 현재 서비스 준비중입니다."
     };
@@ -885,126 +2811,13 @@
       "겨울": "-상세 설명 준비중-"
     };
 
-    // =========================================================
-    // 5) 추천 UI 렌더(정합 강제: RULE에서만 칩 생성)
-    // =========================================================
-    const PANTS_LIST = ["진청","흑청","연청","아이보리","크림","베이지","카키","브라운","차콜","검정"];
-
-    function validateColorsStrict(){
-      const miss = [];
-      const checkRule = (rules)=>{
-        for (const k of Object.keys(rules)){
-          if (!COLORS[k] && !PANTS_LIST.includes(k)) miss.push(k);
-          const r = rules[k] || {};
-          ["good","bad","meh"].forEach(g=>{
-            (r[g]||[]).forEach(it=>{
-              if (!COLORS[it.color] && !PANTS_LIST.includes(it.color)) miss.push(it.color);
-            });
-          });
-        }
-      };
-      checkRule(RULES_PANTS_TO_TOP);
-      checkRule(RULES_TOP_TO_PANTS);
-      const u = [...new Set(miss)];
-      if (u.length) console.warn("COLORS에 없는 색/키가 RULE에 존재:", u);
-    }
-
-    function swatchHex(name){
-      const c = COLORS[name];
-      return c ? c.hex : "#CBD5E1";
-    }
-
-    function labelNeed(need){
-      if (need === "pantsToTop") return "하의→상의(기본)";
-      if (need === "topToPants") return "상의→하의";
-      if (need === "outerToIn")  return "아우터→이너(서비스 준비중)";
-      if (need === "premium")    return "프리미엄(서비스 준비중)";
-      return "아직";
-    }
-
-    function renderSwatchButtons({ mountEl, title, subtitle, list, selected, onPick }){
-      mountEl.innerHTML = "";
-      const card = document.createElement("div");
-      card.className = "card";
-      card.innerHTML = `
-        <div class="cardHead">
-          <b>${title}</b>
-          <span>${subtitle}</span>
-        </div>
-        <div class="btnGrid2" id="__grid"></div>
-      `;
-      const grid = card.querySelector("#__grid");
-
-      list.forEach(name=>{
-        const b = document.createElement("button");
-        b.type = "button";
-        b.className = "btn swatchBtn";
-        b.setAttribute("data-name", name);
-        b.innerHTML = `<span>${name}</span><span class="swatch" style="background:${swatchHex(name)}"></span>`;
-        if (selected === name) b.classList.add("selected");
-        b.addEventListener("click", ()=> onPick(name));
-        grid.appendChild(b);
-      });
-
-      mountEl.appendChild(card);
-    }
-
-    function renderChipsGroup({ mountEl, title, hint, items, onPick }){
-      const card = document.createElement("div");
-      card.className = "card";
-      card.innerHTML = `
-        <div class="cardHead">
-          <b>${title}</b>
-          <span>${hint}</span>
-        </div>
-        <div class="chips"></div>
-      `;
-      const chips = card.querySelector(".chips");
-
-      if (!items || !items.length){
-        const empty = document.createElement("div");
-        empty.className = "empty";
-        empty.textContent = "없음";
-        card.appendChild(empty);
-        mountEl.appendChild(card);
-        return;
-      }
-
-      items.forEach(it=>{
-        const c = document.createElement("div");
-        c.className = "chip";
-        c.setAttribute("role","button");
-        c.setAttribute("tabindex","0");
-        c.innerHTML = `<span class="swatch" style="background:${swatchHex(it.color)}"></span><span>${it.color}</span>`;
-        const apply = ()=> onPick(it);
-        c.addEventListener("click", apply);
-        c.addEventListener("keydown", (e)=>{
-          if (e.key === "Enter" || e.key === " "){
-            e.preventDefault();
-            apply();
-          }
-        });
-        chips.appendChild(c);
-      });
-
-      mountEl.appendChild(card);
-    }
-
-    // =========================================================
-    // 6) App UI
-    // =========================================================
-    const AppUI = {
+    const AppSetup = {
       state: {
         season: null,
-        need: null,              // pantsToTop | topToPants
-        baseColor: null,         // 선택한 기준 색(하의 or 상의)
-        lastPicked: null,         // 마지막으로 클릭한 추천 아이템(표시용)
-        stageTopColor: "#9CA3AF",
-        stagePantsColor: "#3A3C43"
+        need: null
       },
       el: {},
-      tip: { visible:false },
-      stage: { ready:false, mannequin:null, topBase:null, topShade:null, pantsBase:null, pantsShade:null },
+      mainInitialized: false,
 
       init(){
         this.cache();
@@ -1013,9 +2826,6 @@
         this.refreshPills();
         this.refreshCTA();
         this.syncTabs();
-        this.refreshContextBar();
-        validateColorsStrict();
-        this.initLegacyStage();
       },
 
       cache(){
@@ -1023,121 +2833,105 @@
           pageSetup: document.getElementById("pageSetup"),
           pageMain: document.getElementById("pageMain"),
           toast: document.getElementById("toast"),
-
           seasonButtons: document.getElementById("seasonButtons"),
           needActiveWrap: document.getElementById("needButtonsActive"),
           needDisabledWrap: document.getElementById("needButtonsDisabled"),
-
           pillSeasonVal: document.getElementById("pillSeasonVal"),
           pillNeedVal: document.getElementById("pillNeedVal"),
-
           bannerSeason: document.getElementById("bannerSeason"),
           bannerNeed: document.getElementById("bannerNeed"),
-          secNeed: document.getElementById("secNeed"),
-
           btnReset: document.getElementById("btnReset"),
           btnGo: document.getElementById("btnGo"),
-
+          pillFromSetup: document.getElementById("pillFromSetup"),
           tooltip: document.getElementById("tooltip"),
           tooltipTitle: document.getElementById("tooltipTitle"),
           tooltipDesc: document.getElementById("tooltipDesc"),
-
           seasonTabs: document.getElementById("seasonTabs"),
-          needTabs: document.getElementById("needTabs"),
-
-          // page2
-          ctxSeason: document.getElementById("ctxSeason"),
-          ctxNeed: document.getElementById("ctxNeed"),
-          ctxBaseColor: document.getElementById("ctxBaseColor"),
-          mainLeft: document.getElementById("mainLeft"),
-          mainRight: document.getElementById("mainRight"),
-          outfitCanvas: document.getElementById("outfitCanvas")
+          needTabs: document.getElementById("needTabs")
         };
       },
 
       bind(){
         window.addEventListener("mousemove", (e)=>{
-          if (!this.tip.visible) return;
+          if (!this.tipVisible) return;
           this.positionTooltip(e.clientX, e.clientY);
         }, { passive:true });
 
-        // Setup: season
         this.el.seasonButtons.querySelectorAll("button").forEach(btn=>{
           const season = btn.getAttribute("data-season");
-
           btn.addEventListener("click", ()=>{
             this.setSeason(season, { from:"setup", scrollToNeed:true });
           });
-
           btn.addEventListener("mouseenter", (e)=>{
             this.showTooltip("상세 설명", SEASON_DESC[season] || "-상세 설명 준비중-", e.clientX, e.clientY);
           });
-          btn.addEventListener("mouseleave", ()=> this.hideTooltip());
+          btn.addEventListener("mouseleave", ()=>{
+            this.hideTooltip();
+          });
         });
 
-        // Setup: need (active selectable)
         this.el.needActiveWrap.querySelectorAll("button").forEach(btn=>{
           const need = btn.getAttribute("data-need");
-
           btn.addEventListener("click", ()=>{
             if (!this.state.season){
-              this.toast("먼저 계절을 선택하세요");
+              this.showToast("먼저 계절을 선택하세요");
               this.syncGuidance();
               return;
             }
             this.setNeed(need, { from:"setup" });
           });
-
           btn.addEventListener("mouseenter", (e)=>{
-            this.showTooltip("상세 설명", NEED_DESC[need] || "-", e.clientX, e.clientY);
+            if (!need) return;
+            const desc = NEED_DESC[need] || "버튼에 마우스를 올리면 설명이 표시됩니다.";
+            this.showTooltip("상세 설명", desc, e.clientX, e.clientY);
           });
-          btn.addEventListener("mouseleave", ()=> this.hideTooltip());
+          btn.addEventListener("mouseleave", ()=>{
+            this.hideTooltip();
+          });
         });
 
-        // Setup: need (disabled hover only)
         this.el.needDisabledWrap.querySelectorAll("button").forEach(btn=>{
           const need = btn.getAttribute("data-need");
           btn.addEventListener("mouseenter", (e)=>{
             this.showTooltip("상세 설명", NEED_DESC[need] || "- 현재 서비스 준비중입니다.", e.clientX, e.clientY);
           });
-          btn.addEventListener("mouseleave", ()=> this.hideTooltip());
+          btn.addEventListener("mouseleave", ()=>{
+            this.hideTooltip();
+          });
         });
 
-        // CTA
-        this.el.btnGo.addEventListener("click", ()=>{
+        this.el.btnGo.addEventListener("click", async ()=>{
           if (!this.isReady()){
-            this.toast("두 항목을 모두 선택하세요");
+            this.showToast("두 항목을 모두 선택하세요");
             this.syncGuidance();
             return;
           }
-          // 모드에 따라 baseColor 초기값(없으면 null 유지)
+          if (!this.mainInitialized){
+            await App.init();
+            this.mainInitialized = true;
+          }
           this.showPage("main");
+          this.refreshFromSetupLine();
           this.syncTabs();
-          this.refreshContextBar();
-          this.renderMain();     // ✅ 추천 UI 생성
-          this.toast("추천 화면으로 이동");
+          this.onContextChanged();
+          this.showToast("추천 화면으로 이동");
         });
 
-        // Reset
         this.el.btnReset.addEventListener("click", ()=>{
           this.state.season = null;
           this.state.need = null;
-          this.state.baseColor = null;
-          this.state.lastPicked = null;
-
           this.clearSelected(this.el.seasonButtons);
           this.clearSelected(this.el.needActiveWrap);
-
+          this.hideTooltip();
           this.showPage("setup");
           this.syncGuidance();
           this.refreshPills();
           this.refreshCTA();
           this.syncTabs();
-          this.refreshContextBar();
-          this.toast("초기화 완료");
+          this.refreshFromSetupLine();
+          this.showToast("초기화 완료");
         });
 
-        // Tabs: season
         this.el.seasonTabs.querySelectorAll("button[data-season-tab]").forEach(btn=>{
           const season = btn.getAttribute("data-season-tab");
           btn.addEventListener("click", ()=>{
@@ -1149,269 +2943,71 @@
           btn.addEventListener("mouseleave", ()=> this.hideTooltip());
         });
 
-        // Tabs: need
         this.el.needTabs.querySelectorAll("button[data-need-tab]").forEach(btn=>{
           const need = btn.getAttribute("data-need-tab");
           const disabled = btn.hasAttribute("disabled");
           btn.addEventListener("click", ()=>{
             if (disabled) return;
             if (!this.state.season){
-              this.toast("먼저 계절을 선택하세요");
+              this.showToast("먼저 계절을 선택하세요");
               return;
             }
             this.setNeed(need, { from:"main" });
           });
           btn.addEventListener("mouseenter", (e)=>{
-            this.showTooltip("상세 설명", NEED_DESC[need] || "-", e.clientX, e.clientY);
+            this.showTooltip("상세 설명", NEED_DESC[need] || "- 현재 서비스 준비중입니다.", e.clientX, e.clientY);
           });
           btn.addEventListener("mouseleave", ()=> this.hideTooltip());
         });
 
-        window.addEventListener("scroll", ()=>{ if (this.tip.visible) this.hideTooltip(); }, { passive:true });
-        window.addEventListener("resize", ()=>{ if (this.tip.visible) this.hideTooltip(); }, { passive:true });
+        window.addEventListener("scroll", ()=>{ if (this.tipVisible) this.hideTooltip(); }, { passive:true });
+        window.addEventListener("resize", ()=>{ if (this.tipVisible) this.hideTooltip(); }, { passive:true });
       },
 
-      async initLegacyStage(){
-        window.updateOutfit = ({ mode, baseColor })=>{
-          if (!mode || !baseColor) return;
-          this.onBaseColorChanged(mode, baseColor);
-        };
-        window.applyRecommendedColor = ({ mode, recommendedColor })=>{
-          if (!mode || !recommendedColor) return;
-          this.onRecommendedColorPicked(mode, recommendedColor);
-        };
-        await this.ensureStageAssets();
-        this.renderLegacyStage();
+      labelNeed(need){
+        if (need === "pantsToTop") return "하의→상의(기본)";
+        if (need === "topToPants") return "상의→하의";
+        if (need === "outerToIn") return "아우터→이너(서비스 준비중)";
+        if (need === "premium") return "프리미엄(서비스 준비중)";
+        return "아직";
       },
 
-      async ensureStageAssets(){
-        const loadImage = (src)=> new Promise((resolve)=>{
-          const img = new Image();
-          img.onload = ()=> resolve(img);
-          img.onerror = ()=> resolve(null);
-          img.src = src;
-        });
-        const [mannequin, topBase, topShade, pantsBase, pantsShade] = await Promise.all([
-          loadImage("assets/mannequin.png"),
-          loadImage("assets/top_knit_base.png"),
-          loadImage("assets/top_knit_shade.png"),
-          loadImage("assets/pants_slim_base.png"),
-          loadImage("assets/pants_slim_shade.png")
-        ]);
-        this.stage = {
-          ready: !!(topBase && topShade && pantsBase && pantsShade),
-          mannequin, topBase, topShade, pantsBase, pantsShade
-        };
-      },
-
-      tintImage(ctx, img, color, alpha){
-        if (!img) return;
-        const w = ctx.canvas.width;
-        const h = ctx.canvas.height;
-        const off = document.createElement("canvas");
-        off.width = w;
-        off.height = h;
-        const o = off.getContext("2d");
-        o.clearRect(0, 0, w, h);
-        o.drawImage(img, 0, 0, w, h);
-        o.globalCompositeOperation = "source-atop";
-        o.globalAlpha = alpha == null ? 1 : alpha;
-        o.fillStyle = color;
-        o.fillRect(0, 0, w, h);
-        o.globalAlpha = 1;
-        o.globalCompositeOperation = "source-over";
-        ctx.drawImage(off, 0, 0, w, h);
-      },
-
-      renderLegacyStage(){
-        const canvas = this.el.outfitCanvas;
-        if (!canvas) return;
-        const ctx = canvas.getContext("2d");
-        const w = canvas.width;
-        const h = canvas.height;
-        ctx.clearRect(0, 0, w, h);
-
-        if (!this.stage.ready){
-          ctx.fillStyle = "rgba(15,23,42,.62)";
-          ctx.font = "600 14px Pretendard, sans-serif";
-          ctx.fillText("미리보기 에셋을 불러오는 중입니다.", 20, 40);
-          return;
-        }
-
-        if (this.stage.mannequin) ctx.drawImage(this.stage.mannequin, 0, 0, w, h);
-        this.tintImage(ctx, this.stage.pantsBase, this.state.stagePantsColor, 1);
-        if (this.stage.pantsShade) ctx.drawImage(this.stage.pantsShade, 0, 0, w, h);
-        this.tintImage(ctx, this.stage.topBase, this.state.stageTopColor, 1);
-        if (this.stage.topShade) ctx.drawImage(this.stage.topShade, 0, 0, w, h);
-      },
-
-      onBaseColorChanged(mode, baseColor){
-        const hex = swatchHex(baseColor);
-        if (mode === "pantsToTop") this.state.stagePantsColor = hex;
-        if (mode === "topToPants") this.state.stageTopColor = hex;
-        this.renderLegacyStage();
-      },
-
-      onRecommendedColorPicked(mode, recommendedColor){
-        const hex = swatchHex(recommendedColor);
-        if (mode === "pantsToTop") this.state.stageTopColor = hex;
-        if (mode === "topToPants") this.state.stagePantsColor = hex;
-        this.renderLegacyStage();
-      },
-
-      // ===== State setters
       setSeason(season, opts){
         this.state.season = season;
-        this.selectTextMatch(this.el.seasonButtons, season);
-
+        this.selectDataMatch(this.el.seasonButtons, "season", season);
         this.refreshPills();
         this.refreshCTA();
         this.syncGuidance(!!(opts && opts.scrollToNeed));
         this.syncTabs();
-        this.refreshContextBar();
-
-        this.toast(`${season} 선택`);
-
-        if (opts && opts.from === "main"){
-          this.renderMain();
-        }
+        this.refreshFromSetupLine();
+        this.showToast(`${season} 선택 ✅`);
+        if (opts && opts.from === "main") this.onContextChanged();
       },
 
       setNeed(need, opts){
         this.clearSelected(this.el.needActiveWrap);
         const btn = this.el.needActiveWrap.querySelector(`button[data-need="${need}"]`);
         if (btn) btn.classList.add("selected");
-
         this.state.need = need;
-        this.state.baseColor = null;
-        this.state.lastPicked = null;
-        this.state.stageTopColor = "#9CA3AF";
-        this.state.stagePantsColor = "#3A3C43";
-
         this.refreshPills();
         this.refreshCTA();
         this.syncGuidance();
         this.syncTabs();
-        this.refreshContextBar();
-        this.renderLegacyStage();
-
-        this.toast(`${labelNeed(need)} 선택`);
-
-        if (opts && opts.from === "main"){
-          this.renderMain();
-        }
+        this.refreshFromSetupLine();
+        this.showToast(`${this.labelNeed(need)} 선택 ✅`);
+        if (opts && opts.from === "main") this.onContextChanged();
       },
 
-      // ===== Rendering: PAGE 2 main recommendation UI
-      renderMain(){
-        if (!this.el.pageMain.classList.contains("show")) return;
-
-        const need = this.state.need;
-        const base = this.state.baseColor;
-
-        // left: 기준 색 선택
-        if (need === "pantsToTop"){
-          renderSwatchButtons({
-            mountEl: this.el.mainLeft,
-            title: "1) 하의 색 선택",
-            subtitle: "하의를 고르면 상의 추천이 나옵니다",
-            list: PANTS_LIST,
-            selected: base,
-            onPick: (name)=>{
-              this.state.baseColor = name;
-              this.state.lastPicked = null;
-              this.refreshContextBar();
-              this.renderMain();
-              this.onBaseColorChanged("pantsToTop", name);
-              this.toast(`${name} 하의 선택`);
-            }
-          });
-        } else if (need === "topToPants"){
-          // 상의 색 목록은 “역룰에 존재하는 상의 키”만(정합성)
-          const tops = Object.keys(RULES_TOP_TO_PANTS).filter(k => COLORS[k]).sort((a,b)=>a.localeCompare(b,"ko"));
-          renderSwatchButtons({
-            mountEl: this.el.mainLeft,
-            title: "1) 상의 색 선택",
-            subtitle: "상의(셔츠/상의) 색을 고르면 하의 추천이 나옵니다",
-            list: tops,
-            selected: base,
-            onPick: (name)=>{
-              this.state.baseColor = name;
-              this.state.lastPicked = null;
-              this.refreshContextBar();
-              this.renderMain();
-              this.onBaseColorChanged("topToPants", name);
-              this.toast(`${name} 상의 선택`);
-            }
-          });
-        } else {
-          this.el.mainLeft.innerHTML = `<div class="card"><div class="empty">서비스 준비중입니다.</div></div>`;
-          this.el.mainRight.innerHTML = "";
-          return;
-        }
-
-        // right: 추천/비추/대안(그닥) — RULE에서만
-        this.el.mainRight.innerHTML = "";
-        if (!base){
-          const msg = document.createElement("div");
-          msg.className = "card";
-          msg.innerHTML = `<div class="empty">기준 색을 먼저 선택하세요.</div>`;
-          this.el.mainRight.appendChild(msg);
-          return;
-        }
-
-        const rules = (need === "pantsToTop") ? RULES_PANTS_TO_TOP : RULES_TOP_TO_PANTS;
-        const r = rules[base];
-
-        if (!r){
-          const msg = document.createElement("div");
-          msg.className = "card";
-          msg.innerHTML = `<div class="empty">이 색에 대한 RULE이 없습니다. (정합성 유지 때문에 추천을 생성하지 않습니다)</div>`;
-          this.el.mainRight.appendChild(msg);
-          return;
-        }
-
-        const onPick = (it)=>{
-          this.state.lastPicked = it;
-          this.refreshContextBar();
-          this.onRecommendedColorPicked(need, it.color);
-          this.toast(`${it.color} 선택 (${it.grade})`);
-        };
-
-        renderChipsGroup({
-          mountEl: this.el.mainRight,
-          title: "2) 추천 컬러",
-          hint: "RULE에서만 표시",
-          items: (r.good || []),
-          onPick
-        });
-
-        renderChipsGroup({
-          mountEl: this.el.mainRight,
-          title: "3) 비추 컬러",
-          hint: "RULE에서만 표시",
-          items: (r.bad || []),
-          onPick
-        });
-
-        renderChipsGroup({
-          mountEl: this.el.mainRight,
-          title: "4) 대안 (그닥)",
-          hint: "RULE에서만 표시",
-          items: (r.meh || []),
-          onPick
-        });
+      onContextChanged(){
+        // TODO: 추천 로직 연결 지점
       },
 
-      // ===== UI sync
       syncTabs(){
-        // season tabs
         this.el.seasonTabs.querySelectorAll("button[data-season-tab]").forEach(b=>{
           const s = b.getAttribute("data-season-tab");
           if (this.state.season && s === this.state.season) b.classList.add("selected");
           else b.classList.remove("selected");
         });
-        // need tabs
         this.el.needTabs.querySelectorAll("button[data-need-tab]").forEach(b=>{
           const n = b.getAttribute("data-need-tab");
           if (this.state.need && n === this.state.need) b.classList.add("selected");
@@ -1419,44 +3015,37 @@
         });
       },
 
-      refreshContextBar(){
-        const season = this.state.season || "아직";
-        const need = this.state.need ? labelNeed(this.state.need) : "아직";
-        const base = this.state.baseColor || "아직";
-
-        this.el.ctxSeason.textContent = season;
-        this.el.ctxNeed.textContent = need;
-        this.el.ctxBaseColor.textContent = base;
-
-        // 강조(배경/테두리만)
-        const setOn = (el, on)=> on ? el.classList.add("on") : el.classList.remove("on");
-        setOn(this.el.ctxSeason, !!this.state.season);
-        setOn(this.el.ctxNeed, !!this.state.need);
-        setOn(this.el.ctxBaseColor, !!this.state.baseColor);
+      refreshFromSetupLine(){
+        this.el.pillFromSetup.textContent =
+          (this.state.season && this.state.need)
+            ? `${this.state.season} / ${this.labelNeed(this.state.need)}`
+            : "아직";
       },
 
-      isReady(){ return !!(this.state.season && this.state.need); },
-
-      refreshCTA(){
-        const ready = this.isReady();
-        this.el.btnGo.disabled = !ready;
-        this.el.btnGo.textContent = ready ? "추천받기" : "추천받기 (선택 필요)";
-      },
-
-      refreshPills(){
-        this.el.pillSeasonVal.textContent = this.state.season || "아직";
-        this.el.pillNeedVal.textContent = this.state.need ? labelNeed(this.state.need) : "아직";
-      },
-
-      selectTextMatch(container, text){
+      selectDataMatch(container, key, value){
         container.querySelectorAll("button").forEach(b=>{
-          if ((b.textContent || "").trim() === text) b.classList.add("selected");
+          if (b.getAttribute(`data-${key}`) === value) b.classList.add("selected");
           else b.classList.remove("selected");
         });
       },
 
       clearSelected(container){
         container.querySelectorAll("button").forEach(b=> b.classList.remove("selected"));
+      },
+
+      isReady(){
+        return !!(this.state.season && this.state.need);
+      },
+
+      refreshPills(){
+        this.el.pillSeasonVal.textContent = this.state.season || "아직";
+        this.el.pillNeedVal.textContent = this.state.need ? this.labelNeed(this.state.need) : "아직";
+      },
+
+      refreshCTA(){
+        const ready = this.isReady();
+        this.el.btnGo.disabled = !ready;
+        this.el.btnGo.textContent = ready ? "추천받기" : "추천받기 (선택 필요)";
       },
 
       syncGuidance(scrollToNeed){
@@ -1495,7 +3084,8 @@
         }
       },
 
-      toast(msg){
+      showToast(msg){
+        if (!this.el.toast) return;
         this.el.toast.textContent = msg;
         this.el.toast.classList.add("show");
         clearTimeout(this._t);
@@ -1503,40 +3093,40 @@
       },
 
       showTooltip(title, desc, x, y){
-        this.tip.visible = true;
+        this.tipVisible = true;
         this.el.tooltipTitle.textContent = title || "상세 설명";
         this.el.tooltipDesc.textContent = desc || "-상세 설명 준비중-";
         this.el.tooltip.classList.add("show");
         this.positionTooltip(x, y);
       },
+
       hideTooltip(){
-        this.tip.visible = false;
+        this.tipVisible = false;
         this.el.tooltip.classList.remove("show");
       },
+
       positionTooltip(x, y){
         const tip = this.el.tooltip;
         const pad = 12;
         const offset = 14;
-
         const rect = tip.getBoundingClientRect();
         let left = x + offset;
-        let top  = y + offset;
-
+        let top = y + offset;
         const vw = window.innerWidth;
         const vh = window.innerHeight;
-
         if (left + rect.width + pad > vw) left = x - rect.width - offset;
         if (left < pad) left = pad;
-
         if (top + rect.height + pad > vh) top = y - rect.height - offset;
         if (top < pad) top = pad;
-
         tip.style.left = left + "px";
-        tip.style.top  = top + "px";
+        tip.style.top = top + "px";
       }
     };
 
-    AppUI.init();
+    // =========================================================
+    // 초기화
+    // =========================================================
+    AppSetup.init();
   </script>
 </body>
 </html>
