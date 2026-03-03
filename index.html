@@ -455,12 +455,6 @@
       50%  { transform: translateY(-1px); box-shadow: 0 14px 30px rgba(15, 23, 42, .08), 0 0 0 6px rgba(79,70,229,.12); }
       100% { transform: translateY(0); box-shadow: 0 10px 24px rgba(15, 23, 42, .06), 0 0 0 0 rgba(79,70,229,.22); }
     }
-    .mainTopBar{
-      display:flex;
-      justify-content:flex-end;
-      margin-bottom: 10px;
-    }
-
     .segButtons{
       display:grid;
       grid-template-columns: repeat(4, minmax(0,1fr));
@@ -816,6 +810,68 @@
       font-weight: 650;
     }
 
+    .mainTop{
+      border-top: 1px solid var(--stroke);
+      padding-top: 14px;
+      display:grid;
+      gap: 10px;
+    }
+    .tabs{
+      display:grid;
+      gap: 10px;
+    }
+    .tabBar{
+      display:flex;
+      flex-wrap:wrap;
+      gap: 8px;
+      align-items:center;
+    }
+    .tabLabel{
+      font-size: 12px;
+      font-weight: 850;
+      color: rgba(15,23,42,.72);
+      margin-right: 4px;
+    }
+    .tabBtn{
+      border: 1px solid var(--stroke);
+      background: rgba(255,255,255,.92);
+      color: rgba(15,23,42,.88);
+      border-radius: 999px;
+      padding: 10px 12px;
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      cursor: pointer;
+      transition: border-color .12s ease, box-shadow .12s ease, transform .12s ease, opacity .12s ease;
+      user-select:none;
+    }
+    .tabBtn:hover{
+      border-color: var(--stroke2);
+      box-shadow: 0 10px 24px rgba(15,23,42,.08);
+      transform: translateY(-1px);
+    }
+    .tabBtn:active{
+      transform: translateY(0);
+      box-shadow: none;
+    }
+    .tabBtn.selected{
+      color: rgba(255,255,255,.96);
+      background: linear-gradient(135deg, rgba(79,70,229,.98), rgba(37,99,235,.92));
+      border-color: rgba(255,255,255,.18);
+      box-shadow: 0 14px 30px rgba(37,99,235,.16);
+    }
+    .tabBtn[disabled]{
+      cursor:not-allowed;
+      opacity:.55;
+      transform:none !important;
+      box-shadow:none !important;
+    }
+    .tabBtn[disabled]:hover{
+      transform:none;
+      box-shadow:none;
+      border-color: var(--stroke);
+    }
+
     #outfitCanvas{ width: 100%; height: auto; display:block; }
 
     @media (prefers-reduced-motion: reduce){
@@ -895,16 +951,34 @@
     </main>
 
     <section class="page" id="pageMain" aria-label="두 번째 페이지: 추천 화면">
-      <div class="mainTopBar">
-        <button class="btn ghost" type="button" id="btnBack">← 옵션 다시 고르기</button>
-      </div>
+      <section class="mainTop">
+        <div class="statusLine" style="justify-content:flex-start; margin-top:0;">
+          <div><b>선택 반영</b>: <span id="pillFromSetup">아직</span></div>
+        </div>
+
+        <div class="tabs" aria-label="컨텍스트 탭">
+          <div class="tabBar" id="seasonTabs" aria-label="계절 탭">
+            <span class="tabLabel">계절</span>
+            <button class="tabBtn" type="button" data-season-tab="봄">봄</button>
+            <button class="tabBtn" type="button" data-season-tab="여름">여름</button>
+            <button class="tabBtn" type="button" data-season-tab="가을">가을</button>
+            <button class="tabBtn" type="button" data-season-tab="겨울">겨울</button>
+          </div>
+
+          <div class="tabBar" id="needTabs" aria-label="기능 탭">
+            <span class="tabLabel">기능</span>
+            <button class="tabBtn" type="button" data-need-tab="pantsToTop">하의 → 상의</button>
+            <button class="tabBtn" type="button" data-need-tab="topToPants">상의 → 하의</button>
+            <button class="tabBtn" type="button" data-need-tab="outerToIn" disabled aria-disabled="true">아우터 → 이너 (서비스 준비중)</button>
+          </div>
+        </div>
+      </section>
       <section class="grid">
       <!-- LEFT -->
       <section class="panel">
         <div class="panelHead">
           <div class="panelTitle">미리보기 (상의/하의)</div>
           <div class="meta">
-            <span class="pill" id="pillFromSetup">선택 반영: 아직</span>
             <span class="pill" id="statePill">하의 선택: 아직</span>
             <span class="pill" id="shirtPill">상의 선택: 아직</span>
             <span class="pill" id="fitPill">하의 핏: 아직</span>
@@ -2751,6 +2825,7 @@
         this.syncGuidance();
         this.refreshPills();
         this.refreshCTA();
+        this.syncTabs();
       },
 
       cache(){
@@ -2767,11 +2842,12 @@
           bannerNeed: document.getElementById("bannerNeed"),
           btnReset: document.getElementById("btnReset"),
           btnGo: document.getElementById("btnGo"),
-          btnBack: document.getElementById("btnBack"),
           pillFromSetup: document.getElementById("pillFromSetup"),
           tooltip: document.getElementById("tooltip"),
           tooltipTitle: document.getElementById("tooltipTitle"),
-          tooltipDesc: document.getElementById("tooltipDesc")
+          tooltipDesc: document.getElementById("tooltipDesc"),
+          seasonTabs: document.getElementById("seasonTabs"),
+          needTabs: document.getElementById("needTabs")
         };
       },
 
@@ -2784,12 +2860,7 @@
         this.el.seasonButtons.querySelectorAll("button").forEach(btn=>{
           const season = btn.getAttribute("data-season");
           btn.addEventListener("click", ()=>{
-            this.state.season = season;
-            this.selectWithin(this.el.seasonButtons, btn);
-            this.refreshPills();
-            this.refreshCTA();
-            this.showToast(`${season} 선택 ✅`);
-            this.syncGuidance();
+            this.setSeason(season, { from:"setup", scrollToNeed:true });
           });
           btn.addEventListener("mouseenter", (e)=>{
             this.showTooltip("상세 설명", SEASON_DESC[season] || "-상세 설명 준비중-", e.clientX, e.clientY);
@@ -2807,13 +2878,7 @@
               this.syncGuidance();
               return;
             }
-            this.state.need = need;
-            this.clearSelected(this.el.needActiveWrap);
-            btn.classList.add("selected");
-            this.refreshPills();
-            this.refreshCTA();
-            this.showToast(`${this.labelNeed(need)} 선택 ✅`);
-            this.syncGuidance();
+            this.setNeed(need, { from:"setup" });
           });
           btn.addEventListener("mouseenter", (e)=>{
             if (!need) return;
@@ -2846,7 +2911,9 @@
             this.mainInitialized = true;
           }
           this.showPage("main");
-          this.el.pillFromSetup.textContent = `${this.state.season} / ${this.labelNeed(this.state.need)}`;
+          this.refreshFromSetupLine();
+          this.syncTabs();
+          this.onContextChanged();
           this.showToast("추천 화면으로 이동");
         });
 
@@ -2860,14 +2927,37 @@
           this.syncGuidance();
           this.refreshPills();
           this.refreshCTA();
+          this.syncTabs();
+          this.refreshFromSetupLine();
           this.showToast("초기화 완료");
         });
 
-        this.el.btnBack.addEventListener("click", ()=>{
-          this.showPage("setup");
-          this.syncGuidance();
-          this.hideTooltip();
-          this.showToast("옵션 선택으로 이동");
+        this.el.seasonTabs.querySelectorAll("button[data-season-tab]").forEach(btn=>{
+          const season = btn.getAttribute("data-season-tab");
+          btn.addEventListener("click", ()=>{
+            this.setSeason(season, { from:"main" });
+          });
+          btn.addEventListener("mouseenter", (e)=>{
+            this.showTooltip("상세 설명", SEASON_DESC[season] || "-상세 설명 준비중-", e.clientX, e.clientY);
+          });
+          btn.addEventListener("mouseleave", ()=> this.hideTooltip());
+        });
+
+        this.el.needTabs.querySelectorAll("button[data-need-tab]").forEach(btn=>{
+          const need = btn.getAttribute("data-need-tab");
+          const disabled = btn.hasAttribute("disabled");
+          btn.addEventListener("click", ()=>{
+            if (disabled) return;
+            if (!this.state.season){
+              this.showToast("먼저 계절을 선택하세요");
+              return;
+            }
+            this.setNeed(need, { from:"main" });
+          });
+          btn.addEventListener("mouseenter", (e)=>{
+            this.showTooltip("상세 설명", NEED_DESC[need] || "- 현재 서비스 준비중입니다.", e.clientX, e.clientY);
+          });
+          btn.addEventListener("mouseleave", ()=> this.hideTooltip());
         });
 
         window.addEventListener("scroll", ()=>{ if (this.tipVisible) this.hideTooltip(); }, { passive:true });
@@ -2877,14 +2967,64 @@
       labelNeed(need){
         if (need === "pantsToTop") return "하의→상의(기본)";
         if (need === "topToPants") return "상의→하의";
-        if (need === "outerToIn") return "아우터→상/하(서비스 준비중)";
+        if (need === "outerToIn") return "아우터→이너(서비스 준비중)";
         if (need === "premium") return "프리미엄(서비스 준비중)";
         return "아직";
       },
 
-      selectWithin(container, selectedBtn){
+      setSeason(season, opts){
+        this.state.season = season;
+        this.selectDataMatch(this.el.seasonButtons, "season", season);
+        this.refreshPills();
+        this.refreshCTA();
+        this.syncGuidance(!!(opts && opts.scrollToNeed));
+        this.syncTabs();
+        this.refreshFromSetupLine();
+        this.showToast(`${season} 선택 ✅`);
+        if (opts && opts.from === "main") this.onContextChanged();
+      },
+
+      setNeed(need, opts){
+        this.clearSelected(this.el.needActiveWrap);
+        const btn = this.el.needActiveWrap.querySelector(`button[data-need="${need}"]`);
+        if (btn) btn.classList.add("selected");
+        this.state.need = need;
+        this.refreshPills();
+        this.refreshCTA();
+        this.syncGuidance();
+        this.syncTabs();
+        this.refreshFromSetupLine();
+        this.showToast(`${this.labelNeed(need)} 선택 ✅`);
+        if (opts && opts.from === "main") this.onContextChanged();
+      },
+
+      onContextChanged(){
+        // TODO: 추천 로직 연결 지점
+      },
+
+      syncTabs(){
+        this.el.seasonTabs.querySelectorAll("button[data-season-tab]").forEach(b=>{
+          const s = b.getAttribute("data-season-tab");
+          if (this.state.season && s === this.state.season) b.classList.add("selected");
+          else b.classList.remove("selected");
+        });
+        this.el.needTabs.querySelectorAll("button[data-need-tab]").forEach(b=>{
+          const n = b.getAttribute("data-need-tab");
+          if (this.state.need && n === this.state.need) b.classList.add("selected");
+          else b.classList.remove("selected");
+        });
+      },
+
+      refreshFromSetupLine(){
+        this.el.pillFromSetup.textContent =
+          (this.state.season && this.state.need)
+            ? `${this.state.season} / ${this.labelNeed(this.state.need)}`
+            : "아직";
+      },
+
+      selectDataMatch(container, key, value){
         container.querySelectorAll("button").forEach(b=>{
-          if (b === selectedBtn) b.classList.add("selected");
+          if (b.getAttribute(`data-${key}`) === value) b.classList.add("selected");
           else b.classList.remove("selected");
         });
       },
@@ -2908,7 +3048,7 @@
         this.el.btnGo.textContent = ready ? "추천받기" : "추천받기 (선택 필요)";
       },
 
-      syncGuidance(){
+      syncGuidance(scrollToNeed){
         if (!this.state.season){
           this.el.bannerSeason.classList.add("show");
           this.el.bannerNeed.classList.remove("show");
@@ -2922,6 +3062,9 @@
           this.el.bannerNeed.classList.add("show");
           this.el.seasonButtons.classList.remove("attention");
           this.el.needActiveWrap.classList.add("attention");
+          if (scrollToNeed){
+            this.el.secNeed.scrollIntoView({ behavior:"smooth", block:"start" });
+          }
           return;
         }
 
