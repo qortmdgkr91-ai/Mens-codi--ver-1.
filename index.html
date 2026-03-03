@@ -3,27 +3,26 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>이 바지에 뭐입지?</title>
+  <title>오늘 뭐 입지?</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pretendard@latest/dist/web/static/pretendard.css">
 
   <style>
     :root{
-      --bgA:#f7f8fb;
-      --bgB:#eef2ff; /* bgB */
-      --card:#ffffff;
+      --bg:#f6f7fb;
+      --surface: rgba(255,255,255,.92);
+      --surface2: rgba(255,255,255,.98);
       --stroke: rgba(15, 23, 42, .10);
       --stroke2: rgba(15, 23, 42, .16);
 
       --text: rgba(15, 23, 42, .92);
       --muted: rgba(15, 23, 42, .62);
 
-      --shadow: 0 18px 50px rgba(15, 23, 42, .10);
-      --shadow2: 0 10px 24px rgba(15, 23, 42, .08);
-      --radius: 22px;
+      --shadow: 0 10px 30px rgba(15, 23, 42, .08);
+      --shadow2: 0 8px 18px rgba(15, 23, 42, .06);
+      --radius: 18px;
 
-      /* 강조용 */
       --accent: #4f46e5;
-      --accent2:#60a5fa;
-      --warnBg: rgba(79,70,229,.08);
+      --accent2:#2563eb;
       --warnBorder: rgba(79,70,229,.22);
     }
 
@@ -32,14 +31,14 @@
     body{
       margin:0;
       min-height:100vh;
-      font-family: system-ui, -apple-system, "Noto Sans KR", "Segoe UI", Roboto, sans-serif;
+      font-family: Pretendard, system-ui, -apple-system, "Noto Sans KR", "Segoe UI", Roboto, sans-serif;
       color:var(--text);
       background:
-        radial-gradient(900px 600px at 12% 0%, rgba(99,102,241,.18), transparent 55%),
-        radial-gradient(780px 520px at 80% 10%, rgba(16,185,129,.14), transparent 55%),
-        radial-gradient(900px 650px at 60% 100%, rgba(236,72,153,.12), transparent 60%),
-        linear-gradient(180deg, var(--bgA) 0%, var(--bgB) 60%, var(--bgA) 100%);
+        radial-gradient(900px 520px at 15% -10%, rgba(79,70,229,.12), transparent 60%),
+        radial-gradient(900px 520px at 85% 0%, rgba(37,99,235,.10), transparent 60%),
+        linear-gradient(180deg, #f7f8fc 0%, #f4f6ff 45%, var(--bg) 100%);
       padding: 26px 18px 40px;
+      letter-spacing: -0.01em;
     }
 
     /* fireworks canvas */
@@ -60,24 +59,48 @@
     }
 
     .hero{
-      padding: 18px 18px 14px;
+      padding: 18px 18px 16px;
       border-radius: var(--radius);
-      background: linear-gradient(180deg, rgba(255,255,255,.92), rgba(255,255,255,.78));
+      background: linear-gradient(180deg, var(--surface2), var(--surface));
       border: 1px solid var(--stroke);
       box-shadow: var(--shadow);
-      backdrop-filter: blur(10px);
       overflow:hidden;
     }
 
+    .heroInner{
+      display:grid;
+      gap: 8px;
+      text-align:center;
+      padding: 6px 4px 2px;
+    }
+    .overline{
+      font-size: 12px;
+      color: var(--muted);
+      letter-spacing: 0.02em;
+      font-weight: 700;
+    }
     .hero h1{
       margin:0;
       text-align:center;
       font-size: 34px;
-      letter-spacing: -0.03em;
-      line-height: 1.1;
+      line-height: 1.06;
+      letter-spacing: -0.04em;
+      font-weight: 900;
+    }
+    .subline{
+      font-size: 12px;
+      color: rgba(15,23,42,.55);
+      letter-spacing: 0.01em;
+      font-weight: 700;
+    }
+    .heroMeta{
+      margin-top: 10px;
+      display:flex;
+      justify-content:center;
+      gap: 8px;
+      flex-wrap:wrap;
     }
     .hero .sub{
-      margin-top: 8px;
       text-align:center;
       color: var(--muted);
       font-size: 14px;
@@ -97,10 +120,9 @@
     .panel{
       padding: 16px;
       border-radius: var(--radius);
-      background: linear-gradient(180deg, rgba(255,255,255,.92), rgba(255,255,255,.80));
+      background: linear-gradient(180deg, var(--surface2), var(--surface));
       border: 1px solid var(--stroke);
       box-shadow: var(--shadow);
-      backdrop-filter: blur(10px);
     }
 
     .panelHead{
@@ -112,9 +134,9 @@
       flex-wrap:wrap;
     }
     .panelTitle{
-      font-weight: 950;
+      font-weight: 900;
       letter-spacing: -0.02em;
-      font-size: 15px;
+      font-size: 14px;
     }
     .meta{
       display:flex;
@@ -126,11 +148,12 @@
     }
     .pill{
       font-size: 12px;
-      padding: 6px 10px;
+      padding: 7px 10px;
       border-radius: 999px;
-      background: rgba(15, 23, 42, .05);
+      background: rgba(15, 23, 42, .04);
       border: 1px solid var(--stroke);
       color: rgba(15, 23, 42, .78);
+      font-weight: 700;
     }
 
     /* LEFT */
@@ -138,8 +161,8 @@
 
     .outfitCard{
       padding: 14px;
-      border-radius: 18px;
-      background: linear-gradient(180deg, rgba(255,255,255,.92), rgba(255,255,255,.82));
+      border-radius: 16px;
+      background: linear-gradient(180deg, var(--surface2), var(--surface));
       border: 1px solid var(--stroke);
       box-shadow: var(--shadow2);
       overflow:hidden;
@@ -180,7 +203,7 @@
 
     .legend{
       border-radius: 16px;
-      background: rgba(15, 23, 42, .03);
+      background: rgba(15, 23, 42, .02);
       border: 1px solid var(--stroke);
       padding: 12px;
       display:grid;
@@ -232,17 +255,16 @@
     }
 
     .btn{
-      border:0;
+      border:1px solid var(--stroke);
       cursor:pointer;
-      border-radius: 16px;
+      border-radius: 14px;
       padding: 12px 12px;
-      font-weight: 950;
-      letter-spacing: -0.01em;
+      font-weight: 900;
+      letter-spacing: -0.02em;
       color: rgba(15, 23, 42, .92);
-      background: linear-gradient(180deg, rgba(255,255,255,.92), rgba(255,255,255,.82));
-      border: 1px solid var(--stroke);
-      box-shadow: 0 10px 24px rgba(15, 23, 42, .06);
-      transition: transform .12s ease, border-color .12s ease, filter .12s ease;
+      background: rgba(255,255,255,.96);
+      box-shadow: var(--shadow2);
+      transition: transform .12s ease, border-color .12s ease, box-shadow .12s ease, background .12s ease;
       display:flex;
       align-items:center;
       justify-content:space-between;
@@ -251,13 +273,17 @@
       user-select:none;
       text-align:center;
     }
-    .btn:hover{ border-color: var(--stroke2); }
+    .btn:hover{
+      border-color: var(--stroke2);
+      box-shadow: 0 10px 22px rgba(15,23,42,.08);
+      transform: translateY(-1px);
+    }
     .btn:active{ transform: translateY(1px) scale(.99); }
     .btn.primary{
       color: rgba(255,255,255,.96);
-      background: linear-gradient(135deg, rgba(99,102,241,.95), rgba(59,130,246,.90));
+      background: linear-gradient(135deg, rgba(79,70,229,.98), rgba(37,99,235,.92));
       border: 1px solid rgba(255,255,255,.22);
-      box-shadow: 0 16px 36px rgba(59,130,246,.18);
+      box-shadow: 0 16px 34px rgba(37,99,235,.18);
     }
     .btn.ghost{
       background: rgba(255,255,255,.70);
@@ -355,9 +381,9 @@
     #seasonButtons .btn.selected,
     #needButtons .btn.selected{
       color: rgba(255,255,255,.96);
-      background: linear-gradient(135deg, rgba(99,102,241,.95), rgba(59,130,246,.90));
+      background: linear-gradient(135deg, rgba(79,70,229,.98), rgba(37,99,235,.92));
       border: 1px solid rgba(255,255,255,.22);
-      box-shadow: 0 16px 36px rgba(59,130,246,.18);
+      box-shadow: 0 16px 34px rgba(37,99,235,.18);
     }
     .pickBanner{
       display:none;
@@ -533,9 +559,9 @@
     }
 
     .resultSection{
-      border-radius: 18px;
+      border-radius: 16px;
       padding: 12px;
-      background: rgba(15, 23, 42, .03);
+      background: rgba(15, 23, 42, .02);
       border: 1px solid var(--stroke);
       display:grid;
       gap: 10px;
@@ -595,7 +621,7 @@
     .callout{
       border-radius: 16px;
       padding: 12px;
-      background: linear-gradient(180deg, rgba(255,255,255,.92), rgba(255,255,255,.80));
+      background: linear-gradient(180deg, var(--surface2), var(--surface));
       border: 1px solid var(--stroke);
       color: rgba(15, 23, 42, .86);
       font-size: 13px;
@@ -626,7 +652,7 @@
       left: 50%;
       bottom: 18px;
       transform: translateX(-50%);
-      background: rgba(255,255,255,.92);
+      background: rgba(255,255,255,.94);
       border: 1px solid var(--stroke);
       color: rgba(15, 23, 42, .92);
       padding: 10px 12px;
@@ -634,8 +660,8 @@
       font-size: 13px;
       display:none;
       z-index: 10000;
-      backdrop-filter: blur(10px);
       box-shadow: var(--shadow);
+      font-weight: 800;
     }
     .toast.show{ display:block; animation: toast .18s ease both; }
     @keyframes toast{
@@ -661,16 +687,22 @@
 
   <div class="shell">
     <section class="hero">
-      <h1>이 바지에 뭐입지?</h1>
-      <div class="sub">옵션을 고르면 자동으로 다음 화면으로 넘어갑니다. <span style="opacity:.7; font-size:12px;">버전: 6-ui-guided</span></div>
+      <div class="heroInner">
+        <div class="overline">남자는 핏과 컬러가 전부다.</div>
+        <h1>오늘 뭐 입지?</h1>
+        <div class="subline">Men's fashion color match</div>
+      </div>
+      <div class="heroMeta">
+        <span class="pill" id="pillSeason">1) 계절: 아직</span>
+        <span class="pill" id="pillNeed">2) 기능: 아직</span>
+      </div>
     </section>
 
     <section class="panel page show" id="pageSetup" aria-label="첫 페이지: 옵션 선택">
       <div class="panelHead">
         <div class="panelTitle">옵션 선택</div>
         <div class="meta">
-          <span class="pill" id="pillSeason">1) 계절: 아직</span>
-          <span class="pill" id="pillNeed">2) 기능: 아직</span>
+          <span>두 개를 고르면 자동으로 넘어갑니다</span>
         </div>
       </div>
 
