@@ -8,7 +8,7 @@
 
   <style>
     :root{
-      --bg:#f5f5f5;
+      --bg:#f4f4f4;
       --surface: rgba(255,255,255,.92);
       --surface2: rgba(255,255,255,.98);
       --stroke: rgba(0,0,0,.10);
@@ -61,8 +61,10 @@
     .hero{
       padding: 18px 18px 16px;
       border-radius: var(--radius);
-      background: linear-gradient(180deg, var(--surface2), var(--surface));
+      background: #111111;
+      color: rgba(255,255,255,.96);
       border: 1px solid var(--stroke);
+      border-color: rgba(255,255,255,.12);
       box-shadow: var(--shadow);
       overflow:hidden;
     }
@@ -119,7 +121,7 @@
 
     .panel{
       padding: 16px;
-      border-radius: 12px;
+      border-radius: 8px;
       background: linear-gradient(180deg, var(--surface2), var(--surface));
       border: 1px solid var(--stroke);
       box-shadow: var(--shadow);
@@ -161,7 +163,7 @@
 
     .outfitCard{
       padding: 14px;
-      border-radius: 12px;
+      border-radius: 8px;
       background: linear-gradient(180deg, var(--surface2), var(--surface));
       border: 1px solid var(--stroke);
       box-shadow: var(--shadow2);
@@ -192,7 +194,7 @@
     }
 
     .figure{
-      border-radius: 12px;
+      border-radius: 8px;
       background: rgba(15, 23, 42, .03);
       border: 1px solid var(--stroke);
       padding: 12px;
@@ -202,7 +204,7 @@
     }
 
     .legend{
-      border-radius: 12px;
+      border-radius: 8px;
       background: rgba(15, 23, 42, .02);
       border: 1px solid var(--stroke);
       padding: 12px;
@@ -367,7 +369,7 @@
       .btnGrid2{ grid-template-columns: 1fr; }
     }
     .helpBox{
-      border-radius: 12px;
+      border-radius: 8px;
       padding: 12px;
       background: rgba(15, 23, 42, .03);
       border: 1px solid var(--stroke);
@@ -408,7 +410,7 @@
       justify-content:space-between;
       gap: 10px;
       padding: 10px 12px;
-      border-radius: 12px;
+      border-radius: 8px;
       background: linear-gradient(180deg, rgba(0,0,0,.12), rgba(0,0,0,.07));
       border: 1px solid rgba(0,0,0,.28);
       box-shadow: 0 12px 26px rgba(15, 23, 42, .08);
@@ -495,7 +497,7 @@
       justify-content:space-between;
       gap: 10px;
       padding: 10px 12px;
-      border-radius: 12px;
+      border-radius: 8px;
       background: linear-gradient(180deg, rgba(0,0,0,.10), rgba(0,0,0,.06));
       border: 1px solid var(--warnBorder);
       box-shadow: 0 12px 26px rgba(15, 23, 42, .08);
@@ -630,7 +632,7 @@
     }
 
     .callout{
-      border-radius: 12px;
+      border-radius: 8px;
       padding: 12px;
       background: linear-gradient(180deg, var(--surface2), var(--surface));
       border: 1px solid var(--stroke);
@@ -682,7 +684,8 @@
 
     /* Line-first layout overrides */
     .hero{
-      background: transparent;
+      background: #111111;
+      color: rgba(255,255,255,.96);
       border: 0;
       box-shadow: none;
       padding: 4px 2px 6px;
@@ -717,6 +720,12 @@
     }
     .statusLine b{ color: rgba(15,23,42,.88); font-weight: 900; }
     .dotSep{ opacity:.45; }
+    .hero .overline{ color: rgba(255,255,255,.76); }
+    .hero h1{ color: rgba(255,255,255,.96); }
+    .hero .subline{ color: rgba(255,255,255,.72); }
+    .hero .statusLine{ color: rgba(255,255,255,.78); }
+    .hero .statusLine b{ color: rgba(255,255,255,.96); }
+    .hero .dotSep{ color: rgba(255,255,255,.56); }
     .panel{
       padding: 14px 2px 4px;
       border-top: 1px solid var(--stroke);
