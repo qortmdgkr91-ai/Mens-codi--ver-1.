@@ -923,6 +923,59 @@
     #rightPanel{
       margin-top: -10px;
     }
+
+    /* ================================
+       PATCH: 상단 풀블리드 검정 + 전부 직각
+       (색상/모양만)
+    ================================ */
+
+    /* 1) 상단 hero: 화면 전체 가로를 검정으로 꽉 채우기(박스처럼 보이지 않게) */
+    .hero{
+      background: #111111 !important;
+      color: rgba(255,255,255,.96) !important;
+
+      /* full-bleed(컨테이너 밖으로 가로 전체 확장) */
+      margin-left: calc(50% - 50vw) !important;
+      margin-right: calc(50% - 50vw) !important;
+
+      /* 박스 느낌 제거 */
+      border: 0 !important;
+      box-shadow: none !important;
+      border-radius: 0 !important;
+    }
+
+    /* hero 내부 텍스트 색(폰트/크기 건드리지 않음) */
+    .hero .overline{ color: rgba(255,255,255,.78) !important; }
+    .hero h1{ color: rgba(255,255,255,.96) !important; }
+    .hero .subline{ color: rgba(255,255,255,.72) !important; }
+    .hero .statusLine{ color: rgba(255,255,255,.72) !important; }
+    .hero .statusLine b{ color: rgba(255,255,255,.96) !important; }
+    .hero .dotSep{ color: rgba(255,255,255,.55) !important; }
+
+    /* 2) 모든 네모 UI: 완전 직각 */
+    .panel,
+    .section,
+    .outfitCard,
+    .figure,
+    .legend,
+    .btn,
+    .chip,
+    .callout,
+    .toast,
+    .errorBanner,
+    .pickBanner,
+    .pantsPickBanner,
+    .helpBox,
+    .tooltip,
+    .tabBtn,
+    .pill,
+    .badgeIcon,
+    .swatch,
+    .chip .mark{
+      border-radius: 0 !important;
+    }
+
+    .dot{ border-radius:0 !important; }
   </style>
 </head>
 
