@@ -891,7 +891,7 @@
   <div class="shell">
     <header class="hero" aria-label="헤더">
       <div class="heroInner">
-        <div class="overline">남자는 핏과 컬러가 전부다.</div>
+        <div class="overline">남자는 핏과 컬러다.</div>
         <h1>오늘 뭐 입지?</h1>
         <div class="subline">Men's fashion color match</div>
       </div>
@@ -989,7 +989,7 @@
         <div class="outfitWrap">
           <div class="outfitCard">
             <div class="outfitTopRow">
-              <div class="hint">
+              <div class="hint" id="hintText">
                 1) 오른쪽에서 <b>하의 색</b>을 먼저 선택하세요.<br/>
                 2) 추천/비추/그닥 색을 <b>클릭</b>하면 상의가 채워지고 멘트가 바뀝니다.
               </div>
@@ -1056,7 +1056,7 @@
         <div class="panelHead">
           <div class="panelTitle">컬러 선택</div>
           <div class="meta">
-            <span>오른쪽에서 하의 → 추천/비추/그닥 색 클릭</span>
+            <span id="rightMetaText">오른쪽에서 하의 → 추천/비추/그닥 색 클릭</span>
           </div>
         </div>
 
@@ -1066,8 +1066,8 @@
             <div class="left">
               <span class="dot" aria-hidden="true"></span>
               <div style="display:grid; gap:2px;">
-                <b>먼저 하의 색부터 선택하세요</b>
-                <span>하의를 고르면 추천 상의가 열립니다.</span>
+                <b id="firstPickTitle">먼저 하의 색부터 선택하세요</b>
+                <span id="firstPickDesc">하의를 고르면 추천 상의가 열립니다.</span>
               </div>
             </div>
             <button type="button" id="btnFocusPants">여기부터</button>
@@ -1090,24 +1090,24 @@
 
           <div class="resultSection">
             <div class="resultHead">
-              <strong>2) 추천 컬러 (1~2개)</strong>
-              <span class="muted">클릭하면 상의에 적용</span>
+              <strong id="goodTitle">2) 추천 컬러 (1~2개)</strong>
+              <span class="muted" id="goodHint">클릭하면 상의에 적용</span>
             </div>
             <div class="chips" id="goodChips"></div>
           </div>
 
           <div class="resultSection">
             <div class="resultHead">
-              <strong>3) 비추 컬러 (1~2개)</strong>
-              <span class="muted">피하시면 편안합니다</span>
+              <strong id="badTitle">3) 비추 컬러 (1~2개)</strong>
+              <span class="muted" id="badHint">피하시면 편안합니다</span>
             </div>
             <div class="chips" id="badChips"></div>
           </div>
 
           <div class="resultSection">
             <div class="resultHead">
-              <strong>4) 대안 (그닥)</strong>
-              <span class="muted">대안 없으면…</span>
+              <strong id="mehTitle">4) 대안 (그닥)</strong>
+              <span class="muted" id="mehHint">대안 없으면…</span>
             </div>
             <div class="chips" id="mehChips"></div>
           </div>
@@ -1132,15 +1132,30 @@
     const STRINGS = {
       toast: {
         needPants: "먼저 하의 색부터 선택하세요",
+        needTop: "먼저 상의 색부터 선택하세요",
         pantsSelected: (name) => `${name} 하의 선택 ✅`,
+        topSelected: (name) => `${name} 상의 선택 ✅`,
         shirtApplied: (name) => `상의 ${name} 적용!`,
+        pantsApplied: (name) => `하의 ${name} 적용!`,
         needPantsForBoom: "먼저 하의 색부터 선택해 주세요!",
+        needTopForBoom: "먼저 상의 색부터 선택해 주세요!",
         fireworks: "폭죽 🎆 (화면 가득)"
       },
       callout: {
         needPants: "하의 색을 먼저 선택해 주세요. 선택하면 오른쪽에 추천/비추/그닥 색이 나타납니다.",
+        needTop: "상의 색을 먼저 선택해 주세요. 선택하면 오른쪽에 추천/비추/그닥 색이 나타납니다.",
         needPantsShort: "하의 색을 먼저 선택해 주세요. (오른쪽 5가지 중 선택)",
-        pantsPicked: (name) => `지금 하의는 <b>${name}</b>입니다.<br/>오른쪽에서 상의 컬러를 <b>클릭</b>하면 조합 멘트가 표시됩니다.`
+        needTopShort: "상의 색을 먼저 선택해 주세요. (오른쪽에서 선택)",
+        pantsPicked: (name) => `지금 하의는 <b>${name}</b>입니다.<br/>오른쪽에서 상의 컬러를 <b>클릭</b>하면 조합 멘트가 표시됩니다.`,
+        topPicked: (name) => `지금 상의는 <b>${name}</b>입니다.<br/>오른쪽에서 하의 컬러를 <b>클릭</b>하면 조합 멘트가 표시됩니다.`
+      },
+      hint: {
+        pantsToTop: `1) 오른쪽에서 <b>하의 색</b>을 먼저 선택하세요.<br/>2) 추천/비추/그닥 색을 <b>클릭</b>하면 상의가 채워지고 멘트가 바뀝니다.`,
+        topToPants: `1) 오른쪽에서 <b>상의 색</b>을 먼저 선택하세요.<br/>2) 추천/비추/그닥 색을 <b>클릭</b>하면 하의가 채워지고 멘트가 바뀝니다.`
+      },
+      rightMeta: {
+        pantsToTop: "오른쪽에서 하의 → 추천/비추/그닥 색 클릭",
+        topToPants: "오른쪽에서 상의 → 추천/비추/그닥 색 클릭"
       }
     };
 
@@ -1732,6 +1747,33 @@
       return { good, bad, meh };
     }
 
+    function generatePantsRecommendations(topName, ctx){
+      const pantsList = ["진청","흑청","연청","아이보리","크림","베이지","카키","브라운","차콜","검정"];
+      const scored = pantsList.map(pantsName => {
+        const score = scoreShirtForPants(pantsName, topName, ctx);
+        const grade = gradeFromScore(score);
+        return { color: pantsName, score, grade };
+      }).sort((a,b)=> b.score - a.score);
+
+      const goodPool = scored.filter(x => x.grade === "강추" || x.grade === "괜찮음");
+      const good = goodPool.slice(0, 2).map(x => ({ color:x.color, grade:x.grade }));
+
+      const badPool = scored.slice().reverse().filter(x => x.grade === "비추" || x.grade === "그닥");
+      const bad = badPool.slice(0, 2).map(x => ({ color:x.color, grade:x.grade }));
+
+      const used = new Set([...good.map(x=>x.color), ...bad.map(x=>x.color)]);
+      const mehPool = scored.filter(x => !used.has(x.color) && (x.grade === "그닥" || x.grade === "괜찮음"));
+      const meh = mehPool.slice(0, 2).map(x => ({ color:x.color, grade:x.grade }));
+
+      if (good.length < 2){
+        const extra = scored.filter(x=>!used.has(x.color)).slice(0, 2-good.length)
+          .map(x=>({ color:x.color, grade:"괜찮음" }));
+        good.push(...extra);
+      }
+
+      return { good, bad, meh };
+    }
+
     // =========================================================
     // 캔버스 합성 렌더
     // =========================================================
@@ -2058,6 +2100,7 @@
     // App
     // =========================================================
     const App = {
+      mode: "pantsToTop",
       state: {
         selectedPants: null,
         selectedShirt: null,
@@ -2076,16 +2119,13 @@
         this.cacheEls();
         this.bindStatic();
         this.setupIcons();
-        this.makePantsButtons();
         this.makeBottomFitButtons();
         this.makeTopTypeButtons();
         await this.loadAssets();
-        this.setNeedsPants(true);
-
-        this.el.goodChips.innerHTML = `<div class="muted">하의 색을 먼저 선택하세요.</div>`;
-        this.el.badChips.innerHTML  = `<div class="muted">하의 색을 먼저 선택하세요.</div>`;
-        this.el.mehChips.innerHTML  = `<div class="muted">하의 색을 먼저 선택하세요.</div>`;
-
+        this.setMode(this.mode);
+        this.el.goodChips.innerHTML = `<div class="muted">${this.mode === "topToPants" ? "상의 색을 먼저 선택하세요." : "하의 색을 먼저 선택하세요."}</div>`;
+        this.el.badChips.innerHTML  = `<div class="muted">${this.mode === "topToPants" ? "상의 색을 먼저 선택하세요." : "하의 색을 먼저 선택하세요."}</div>`;
+        this.el.mehChips.innerHTML  = `<div class="muted">${this.mode === "topToPants" ? "상의 색을 먼저 선택하세요." : "하의 색을 먼저 선택하세요."}</div>`;
         validateRules();
       },
 
@@ -2114,7 +2154,17 @@
           legendHeart: document.getElementById("legendHeart"),
           legendCircle: document.getElementById("legendCircle"),
           legendTriangle: document.getElementById("legendTriangle"),
-          legendX: document.getElementById("legendX")
+          legendX: document.getElementById("legendX"),
+          hintText: document.getElementById("hintText"),
+          rightMetaText: document.getElementById("rightMetaText"),
+          firstPickTitle: document.getElementById("firstPickTitle"),
+          firstPickDesc: document.getElementById("firstPickDesc"),
+          goodHint: document.getElementById("goodHint"),
+          goodTitle: document.getElementById("goodTitle"),
+          badHint: document.getElementById("badHint"),
+          badTitle: document.getElementById("badTitle"),
+          mehHint: document.getElementById("mehHint"),
+          mehTitle: document.getElementById("mehTitle")
         };
       },
 
@@ -2126,11 +2176,20 @@
         });
 
         this.el.btnBoom.addEventListener("click", ()=>{
-          if(!this.state.selectedPants){
-            this.showToast(STRINGS.toast.needPantsForBoom);
-            this.el.statusCallout.textContent = STRINGS.callout.needPantsShort;
-            this.setNeedsPants(true);
-            return;
+          if(this.mode === "topToPants"){
+            if(!this.state.selectedShirt){
+              this.showToast(STRINGS.toast.needTopForBoom);
+              this.el.statusCallout.textContent = STRINGS.callout.needTopShort;
+              this.setNeedsFirstPick(true);
+              return;
+            }
+          }else{
+            if(!this.state.selectedPants){
+              this.showToast(STRINGS.toast.needPantsForBoom);
+              this.el.statusCallout.textContent = STRINGS.callout.needPantsShort;
+              this.setNeedsFirstPick(true);
+              return;
+            }
           }
           this.fireworks();
           this.playPop();
@@ -2149,6 +2208,49 @@
         this.el.legendCircle.src = ICON.circle;
         this.el.legendTriangle.src = ICON.triangle;
         this.el.legendX.src = ICON.x;
+      },
+
+      setMode(need){
+        this.mode = (need === "topToPants") ? "topToPants" : "pantsToTop";
+        if (this.el.hintText) this.el.hintText.innerHTML = (this.mode === "topToPants") ? STRINGS.hint.topToPants : STRINGS.hint.pantsToTop;
+        if (this.el.rightMetaText) this.el.rightMetaText.textContent = (this.mode === "topToPants") ? STRINGS.rightMeta.topToPants : STRINGS.rightMeta.pantsToTop;
+
+        if (this.mode === "topToPants"){
+          this.el.pantsTitle.textContent = "1) 상의 색 (17가지)";
+          this.el.firstPickTitle.textContent = "먼저 상의 색부터 선택하세요";
+          this.el.firstPickDesc.textContent = "상의을 고르면 추천 하의가 열립니다.";
+          this.el.goodHint.textContent = "클릭하면 하의에 적용";
+          this.el.goodTitle.textContent = "2) 추천 컬러 (1~2개)";
+          this.el.badTitle.textContent = "3) 비추 컬러 (1~2개)";
+          this.el.mehTitle.textContent = "4) 대안 (그닥)";
+          this.makeTopColorButtons();
+          this.resetForMode();
+          this.setNeedsFirstPick(true);
+        }else{
+          this.el.pantsTitle.textContent = "1) 하의 색 (10가지)";
+          this.el.firstPickTitle.textContent = "먼저 하의 색부터 선택하세요";
+          this.el.firstPickDesc.textContent = "하의를 고르면 추천 상의가 열립니다.";
+          this.el.goodHint.textContent = "클릭하면 상의에 적용";
+          this.el.goodTitle.textContent = "2) 추천 컬러 (1~2개)";
+          this.el.badTitle.textContent = "3) 비추 컬러 (1~2개)";
+          this.el.mehTitle.textContent = "4) 대안 (그닥)";
+          this.makePantsButtons();
+          this.resetForMode();
+          this.setNeedsFirstPick(true);
+        }
+      },
+
+      resetForMode(){
+        this.state.selectedPants = null;
+        this.state.selectedShirt = null;
+        this.state.selectedGrade = null;
+        this.el.statePill.textContent = "하의 선택: 아직";
+        this.el.shirtPill.textContent = "상의 선택: 아직";
+        this.el.goodChips.innerHTML = `<div class="muted">${this.mode === "topToPants" ? "상의 색을 먼저 선택하세요." : "하의 색을 먼저 선택하세요."}</div>`;
+        this.el.badChips.innerHTML  = `<div class="muted">${this.mode === "topToPants" ? "상의 색을 먼저 선택하세요." : "하의 색을 먼저 선택하세요."}</div>`;
+        this.el.mehChips.innerHTML  = `<div class="muted">${this.mode === "topToPants" ? "상의 색을 먼저 선택하세요." : "하의 색을 먼저 선택하세요."}</div>`;
+        this.el.statusCallout.textContent = (this.mode === "topToPants") ? STRINGS.callout.needTop : STRINGS.callout.needPants;
+        this.renderIfReady();
       },
 
       async loadAssets(){
@@ -2445,12 +2547,12 @@
         this.toastTimer = setTimeout(()=> this.el.toast.classList.remove("show"), 1400);
       },
 
-      setNeedsPants(on){
+      setNeedsFirstPick(on){
         if (on){
           this.el.pantsPickBanner.classList.add("show");
           this.el.pantsButtons.classList.add("attention");
           this.el.rightPanel.classList.add("needsPants");
-          this.showToast(STRINGS.toast.needPants);
+          this.showToast(this.mode === "topToPants" ? STRINGS.toast.needTop : STRINGS.toast.needPants);
         }else{
           this.el.pantsPickBanner.classList.remove("show");
           this.el.pantsButtons.classList.remove("attention");
@@ -2468,6 +2570,21 @@
           b.setAttribute("data-color", name);
           b.innerHTML = `<span>${name}</span><span class="swatch" style="background:${colorHexSafe(name)}"></span>`;
           b.addEventListener("click", ()=> this.selectPants(name));
+          this.el.pantsButtons.appendChild(b);
+        });
+      },
+
+      makeTopColorButtons(){
+        const topsList = ["흰색","아이보리","크림","그레이","차콜","네이비","베이지","브라운","카키","파란색","노란색","핑크","녹색","검정","진청","흑청","연청"];
+        this.el.pantsButtons.innerHTML = "";
+        topsList.forEach(name=>{
+          if (!hasColor(name)) return;
+          const b = document.createElement("button");
+          b.className = "btn";
+          b.type = "button";
+          b.setAttribute("data-color", name);
+          b.innerHTML = `<span>${name}</span><span class="swatch" style="background:${colorHexSafe(name)}"></span>`;
+          b.addEventListener("click", ()=> this.selectTopColor(name));
           this.el.pantsButtons.appendChild(b);
         });
       },
@@ -2511,27 +2628,35 @@
       },
 
       refreshRecommendations(){
-        if (!this.state.selectedPants) return;
         const ctx = { topType: this.state.selectedTopType, bottomFit: this.state.selectedBottomFit };
-        const rec = generateRecommendations(this.state.selectedPants, ctx);
-        this.renderChips(this.el.goodChips, rec.good, 2);
-        this.renderChips(this.el.badChips,  rec.bad,  2);
-        this.renderChips(this.el.mehChips,  rec.meh,  2);
+        if (this.mode === "topToPants"){
+          if (!this.state.selectedShirt) return;
+          const rec = generatePantsRecommendations(this.state.selectedShirt, ctx);
+          this.renderChips(this.el.goodChips, rec.good, 2, "pants");
+          this.renderChips(this.el.badChips,  rec.bad,  2, "pants");
+          this.renderChips(this.el.mehChips,  rec.meh,  2, "pants");
+        }else{
+          if (!this.state.selectedPants) return;
+          const rec = generateRecommendations(this.state.selectedPants, ctx);
+          this.renderChips(this.el.goodChips, rec.good, 2, "shirt");
+          this.renderChips(this.el.badChips,  rec.bad,  2, "shirt");
+          this.renderChips(this.el.mehChips,  rec.meh,  2, "shirt");
+        }
       },
 
-      renderStatusCallout(grade, colorName){
+      renderStatusCallout(grade, shirtColorName){
         if (this.state.loadError) return;
         const iconSrc = (GRADE[grade] && GRADE[grade].icon) ? GRADE[grade].icon : ICON.circle;
         const phrase = (GRADE[grade] && GRADE[grade].phrase) ? GRADE[grade].phrase : "";
-        const bw = badWeight(this.state.selectedPants, colorName);
-        const caseKey = findEduKeyFromCases(this.state.selectedPants, colorName);
+        const bw = badWeight(this.state.selectedPants, shirtColorName);
+        const caseKey = findEduKeyFromCases(this.state.selectedPants, shirtColorName);
         let eduKey;
         if ((grade === "비추" || grade === "그닥") && bw > 0) eduKey = "avoid";
         else if (caseKey) eduKey = caseKey;
-        else eduKey = getEduKey(this.state.selectedPants, colorName, grade);
+        else eduKey = getEduKey(this.state.selectedPants, shirtColorName, grade);
         const eduLine = EDU_TEXT[eduKey] || EDU_TEXT.contrast;
         const pantsLabel = this.formatWithOption(this.state.selectedPants, this.state.selectedBottomFit);
-        const shirtLabel = this.formatWithOption(colorName, this.state.selectedTopType);
+        const shirtLabel = this.formatWithOption(shirtColorName, this.state.selectedTopType);
         const styleLine = getStyleLine(this.state.selectedTopType);
         const styleHtml = styleLine
           ? `<div style="color: rgba(15,23,42,.70); font-size:12px; line-height:1.4;">스타일: ${styleLine}</div>`
@@ -2561,6 +2686,33 @@
 
       updateStatusCallout(){
         if (this.state.loadError) return;
+        if (this.mode === "topToPants"){
+          if (this.state.selectedShirt && !this.state.selectedPants){
+            const styleLine = getStyleLine(this.state.selectedTopType);
+            const styleHtml = styleLine
+              ? `<div style="margin-top:6px; color: rgba(15,23,42,.70); font-size:12px; line-height:1.4;">스타일: ${styleLine}</div>`
+              : "";
+            this.el.statusCallout.innerHTML = STRINGS.callout.topPicked(this.state.selectedShirt) + styleHtml;
+            return;
+          }
+          if (!this.state.selectedShirt){
+            this.el.statusCallout.textContent = STRINGS.callout.needTop;
+            return;
+          }
+        }else{
+          if (this.state.selectedPants && !this.state.selectedShirt){
+            const styleLine = getStyleLine(this.state.selectedTopType);
+            const styleHtml = styleLine
+              ? `<div style="margin-top:6px; color: rgba(15,23,42,.70); font-size:12px; line-height:1.4;">스타일: ${styleLine}</div>`
+              : "";
+            this.el.statusCallout.innerHTML = STRINGS.callout.pantsPicked(this.state.selectedPants) + styleHtml;
+            return;
+          }
+          if (!this.state.selectedPants){
+            this.el.statusCallout.textContent = STRINGS.callout.needPants;
+            return;
+          }
+        }
         if (this.state.selectedPants && this.state.selectedShirt && this.state.selectedGrade){
           this.renderStatusCallout(this.state.selectedGrade, this.state.selectedShirt);
           return;
@@ -2574,20 +2726,20 @@
             `현재 <b>${pantsLabel}</b> + <b>${shirtLabel}</b> 적용 중입니다.<br/>오른쪽 추천/비추/그닥 칩을 다시 <b>클릭</b>해서 멘트를 갱신하세요.` + styleHtml;
           return;
         }
-        if (this.state.selectedPants){
-          const styleLine = getStyleLine(this.state.selectedTopType);
-          const styleHtml = styleLine
-            ? `<div style="margin-top:6px; color: rgba(15,23,42,.70); font-size:12px; line-height:1.4;">스타일: ${styleLine}</div>`
-            : "";
-          this.el.statusCallout.innerHTML = STRINGS.callout.pantsPicked(this.state.selectedPants) + styleHtml;
-        }
       },
 
-      renderChips(el, items, limit){
+      renderChips(el, items, limit, applyTarget){
         el.innerHTML = "";
-        if (!this.state.selectedPants){
-          el.innerHTML = `<div class="muted">하의 색을 먼저 선택하세요.</div>`;
-          return;
+        if (this.mode === "topToPants"){
+          if (!this.state.selectedShirt){
+            el.innerHTML = `<div class="muted">상의 색을 먼저 선택하세요.</div>`;
+            return;
+          }
+        }else{
+          if (!this.state.selectedPants){
+            el.innerHTML = `<div class="muted">하의 색을 먼저 선택하세요.</div>`;
+            return;
+          }
         }
         if (!items || items.length === 0){
           el.innerHTML = `<div class="muted">없음</div>`;
@@ -2618,7 +2770,13 @@
             <span>${it.color}</span>
           `;
 
-          const apply = ()=> this.applyShirt(it.color, it.grade);
+          const apply = ()=>{
+            if (applyTarget === "pants"){
+              this.applyPants(it.color, it.grade);
+            }else{
+              this.applyShirt(it.color, it.grade);
+            }
+          };
           c.addEventListener("click", apply);
           c.addEventListener("keydown", (e)=>{
             if (e.key === "Enter" || e.key === " "){
@@ -2643,12 +2801,34 @@
         });
 
         this.state.selectedShirt = null;
+        this.state.selectedGrade = null;
         this.el.shirtPill.textContent = "상의 선택: 아직";
-
-        this.setNeedsPants(false);
+        this.setNeedsFirstPick(false);
         this.refreshRecommendations();
         this.updateStatusCallout();
         this.showToast(STRINGS.toast.pantsSelected(name));
+      },
+
+      selectTopColor(name){
+        this.state.selectedShirt = name;
+        this.state.selectedGrade = null;
+        this.state.topColor = colorHexSafe(name, this.state.topColor);
+        this.el.shirtPill.textContent = "상의 선택: " + name;
+        this.renderIfReady();
+
+        const btns = this.el.pantsButtons.querySelectorAll("button");
+        btns.forEach(btn => {
+          if (btn.getAttribute("data-color") === name) btn.classList.add("selected");
+          else btn.classList.remove("selected");
+        });
+
+        this.state.selectedPants = null;
+        this.el.statePill.textContent = "하의 선택: 아직";
+
+        this.setNeedsFirstPick(false);
+        this.refreshRecommendations();
+        this.updateStatusCallout();
+        this.showToast(STRINGS.toast.topSelected(name));
       },
 
       selectBottomFit(name){
@@ -2685,6 +2865,20 @@
         this.el.shirtPill.textContent = "상의 선택: " + colorName;
         this.renderStatusCallout(grade, colorName);
         this.showToast(STRINGS.toast.shirtApplied(colorName));
+      },
+
+      applyPants(colorName, grade){
+        this.state.selectedPants = colorName;
+        this.state.selectedGrade = grade;
+        this.state.pantsColor = colorHexSafe(colorName, this.state.pantsColor);
+        this.renderIfReady();
+        this.el.statePill.textContent = "하의 선택: " + colorName;
+        if (this.state.selectedShirt){
+          this.renderStatusCallout(grade, this.state.selectedShirt);
+        }else{
+          this.updateStatusCallout();
+        }
+        this.showToast(STRINGS.toast.pantsApplied(colorName));
       },
 
       fitFxCanvas(){
@@ -2847,7 +3041,8 @@
           tooltipTitle: document.getElementById("tooltipTitle"),
           tooltipDesc: document.getElementById("tooltipDesc"),
           seasonTabs: document.getElementById("seasonTabs"),
-          needTabs: document.getElementById("needTabs")
+          needTabs: document.getElementById("needTabs"),
+          secNeed: document.getElementById("secNeed")
         };
       },
 
@@ -2907,8 +3102,11 @@
             return;
           }
           if (!this.mainInitialized){
+            App.mode = this.state.need;
             await App.init();
             this.mainInitialized = true;
+          }else{
+            App.setMode(this.state.need);
           }
           this.showPage("main");
           this.refreshFromSetupLine();
@@ -2999,7 +3197,9 @@
       },
 
       onContextChanged(){
-        // TODO: 추천 로직 연결 지점
+        if (this.mainInitialized){
+          App.setMode(this.state.need);
+        }
       },
 
       syncTabs(){
