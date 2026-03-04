@@ -2580,25 +2580,12 @@
         this.el.rowTopType2.style.display   = (this.state.step===2 && isPTT) ? "" : "none";
         this.el.rowBottomFit2.style.display = (this.state.step===2 && !isPTT) ? "" : "none";
 
-        let topHomeSlot = this.el.rowTopType.querySelector(".segButtons");
-        if (!topHomeSlot){
-          topHomeSlot = document.createElement("div");
-          topHomeSlot.className = "segButtons";
-          this.el.rowTopType.appendChild(topHomeSlot);
-        }
-        let fitHomeSlot = this.el.rowBottomFit.querySelector(".segButtons");
-        if (!fitHomeSlot){
-          fitHomeSlot = document.createElement("div");
-          fitHomeSlot.className = "segButtons";
-          this.el.rowBottomFit.appendChild(fitHomeSlot);
-        }
-
-        const topSlot = (isPTT && this.state.step===2) ? this.el.topTypeButtons2 : topHomeSlot;
+        const topSlot = (isPTT && this.state.step===2) ? this.el.topTypeButtons2 : this.el.rowTopType;
         if (topSlot && this.el.topTypeButtons && topSlot !== this.el.topTypeButtons.parentElement){
           topSlot.appendChild(this.el.topTypeButtons);
         }
 
-        const fitSlot = (!isPTT && this.state.step===2) ? this.el.bottomFitButtons2 : fitHomeSlot;
+        const fitSlot = (!isPTT && this.state.step===2) ? this.el.bottomFitButtons2 : this.el.rowBottomFit;
         if (fitSlot && this.el.bottomFitButtons && fitSlot !== this.el.bottomFitButtons.parentElement){
           fitSlot.appendChild(this.el.bottomFitButtons);
         }
