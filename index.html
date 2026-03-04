@@ -883,15 +883,14 @@
     }
 
     .legendRow{
-      display:flex;
-      gap: 10px;
+      display:grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 6px;
       align-items:flex-start;
-      justify-content:space-between;
-      flex-wrap:wrap;
     }
     .legendRow .legendItem{
-      min-width: 120px;
-      flex: 1 1 0;
+      min-width: 0;
+      flex: initial;
     }
     .legendDivider{
       height: 1px;
