@@ -976,6 +976,48 @@
     }
 
     .dot{ border-radius:0 !important; }
+
+    /* ===== PATCH: season selected colors only ===== */
+
+    /* 공통: 계절 버튼 selected일 때 글씨는 흰색(노란색만 검정) */
+    #seasonButtons .btn.selected,
+    #seasonTabs .tabBtn.selected{
+      background: #111111;           /* 기본값(개별에서 덮어씀) */
+      border: 1px solid rgba(0,0,0,.18);
+      box-shadow: none;
+    }
+
+    /* 봄 */
+    #seasonButtons .btn.selected[data-season="봄"],
+    #seasonTabs .tabBtn.selected[data-season-tab="봄"]{
+      background: #F2C94C;           /* 노란색 */
+      color: rgba(0,0,0,.92);
+      border-color: rgba(0,0,0,.18);
+    }
+
+    /* 여름 */
+    #seasonButtons .btn.selected[data-season="여름"],
+    #seasonTabs .tabBtn.selected[data-season-tab="여름"]{
+      background: #7DD3FC;           /* 하늘색 */
+      color: rgba(0,0,0,.92);
+      border-color: rgba(0,0,0,.18);
+    }
+
+    /* 가을 */
+    #seasonButtons .btn.selected[data-season="가을"],
+    #seasonTabs .tabBtn.selected[data-season-tab="가을"]{
+      background: #7A1E3A;           /* 버건디 */
+      color: rgba(255,255,255,.96);
+      border-color: rgba(0,0,0,.18);
+    }
+
+    /* 겨울 */
+    #seasonButtons .btn.selected[data-season="겨울"],
+    #seasonTabs .tabBtn.selected[data-season-tab="겨울"]{
+      background: #1D4ED8;           /* 로열블루 */
+      color: rgba(255,255,255,.96);
+      border-color: rgba(0,0,0,.18);
+    }
   </style>
 </head>
 
