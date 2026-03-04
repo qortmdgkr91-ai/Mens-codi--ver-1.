@@ -1090,6 +1090,165 @@
       color: rgba(255,255,255,.96);
       border-color: rgba(0,0,0,.18);
     }
+    /* ===== PATCH: guidance/attention colors follow season (setup + main) ===== */
+
+    /* 0) 기본(선택 안 했을 때는 기존 유지) */
+    :root{
+      --seasonC: rgba(0,0,0,.18);
+      --seasonCsoft: rgba(0,0,0,.10);
+      --seasonCbg: rgba(0,0,0,.06);
+    }
+
+    /* 1) 계절별 변수 세팅 - 1페이지(Setup) */
+    #pageSetup:has(#seasonButtons .btn.selected[data-season="봄"]){
+      --seasonC: #F2C94C;
+      --seasonCsoft: rgba(242,201,76,.35);
+      --seasonCbg: rgba(242,201,76,.12);
+    }
+    #pageSetup:has(#seasonButtons .btn.selected[data-season="여름"]){
+      --seasonC: #7DD3FC;
+      --seasonCsoft: rgba(125,211,252,.40);
+      --seasonCbg: rgba(125,211,252,.14);
+    }
+    #pageSetup:has(#seasonButtons .btn.selected[data-season="가을"]){
+      --seasonC: #7A1E3A;
+      --seasonCsoft: rgba(122,30,58,.35);
+      --seasonCbg: rgba(122,30,58,.12);
+    }
+    #pageSetup:has(#seasonButtons .btn.selected[data-season="겨울"]){
+      --seasonC: #30106B;
+      --seasonCsoft: rgba(48,16,107,.35);
+      --seasonCbg: rgba(48,16,107,.12);
+    }
+
+    /* 2) 계절별 변수 세팅 - 2페이지(Main) */
+    #pageMain:has(#seasonTabs .tabBtn.selected[data-season-tab="봄"]){
+      --seasonC: #F2C94C;
+      --seasonCsoft: rgba(242,201,76,.35);
+      --seasonCbg: rgba(242,201,76,.12);
+    }
+    #pageMain:has(#seasonTabs .tabBtn.selected[data-season-tab="여름"]){
+      --seasonC: #7DD3FC;
+      --seasonCsoft: rgba(125,211,252,.40);
+      --seasonCbg: rgba(125,211,252,.14);
+    }
+    #pageMain:has(#seasonTabs .tabBtn.selected[data-season-tab="가을"]){
+      --seasonC: #7A1E3A;
+      --seasonCsoft: rgba(122,30,58,.35);
+      --seasonCbg: rgba(122,30,58,.12);
+    }
+    #pageMain:has(#seasonTabs .tabBtn.selected[data-season-tab="겨울"]){
+      --seasonC: #30106B;
+      --seasonCsoft: rgba(48,16,107,.35);
+      --seasonCbg: rgba(48,16,107,.12);
+    }
+
+    /* 3) 유도 배너/점(dot) 색 연동 (구조/크기 변경 금지, 색만) */
+    #pageSetup .pickBanner,
+    #pageMain .pickBanner,
+    #pageMain .pantsPickBanner{
+      border-color: color-mix(in srgb, var(--seasonC) 45%, transparent) !important;
+      background: linear-gradient(180deg, var(--seasonCbg), color-mix(in srgb, var(--seasonCbg) 60%, transparent)) !important;
+    }
+
+    #pageSetup .pickBanner .dot,
+    #pageMain .pickBanner .dot,
+    #pageMain .pantsPickBanner .dot{
+      background: var(--seasonC) !important;
+      box-shadow: 0 0 0 6px color-mix(in srgb, var(--seasonCsoft) 55%, transparent) !important;
+    }
+
+    /* 4) attention(깜빡임/펄스) 테두리/그림자 색 연동 */
+    /* Setup: 계절 버튼/기능 버튼 attention */
+    #seasonButtons.attention .btn,
+    #needButtonsActive.attention .btn{
+      border-color: color-mix(in srgb, var(--seasonC) 45%, transparent) !important;
+      box-shadow: 0 10px 24px rgba(15, 23, 42, .06), 0 0 0 0 color-mix(in srgb, var(--seasonCsoft) 60%, transparent) !important;
+    }
+
+    /* Main: 하의 버튼 attention */
+    .pantsButtons.attention .btn{
+      border-color: color-mix(in srgb, var(--seasonC) 45%, transparent) !important;
+      box-shadow: 0 10px 24px rgba(15, 23, 42, .06), 0 0 0 0 color-mix(in srgb, var(--seasonCsoft) 60%, transparent) !important;
+    }
+
+    /* 5) 펄스 애니메이션 색(키프레임)을 계절별로 분기 */
+    /* setupPulse(계절/기능 유도) */
+    @keyframes setupPulse_spring{
+      0%{ transform: translateY(0); box-shadow: 0 10px 24px rgba(15,23,42,.06), 0 0 0 0 rgba(242,201,76,.30); }
+      50%{ transform: translateY(-1px); box-shadow: 0 14px 30px rgba(15,23,42,.08), 0 0 0 6px rgba(242,201,76,.18); }
+      100%{ transform: translateY(0); box-shadow: 0 10px 24px rgba(15,23,42,.06), 0 0 0 0 rgba(242,201,76,.30); }
+    }
+    @keyframes setupPulse_summer{
+      0%{ transform: translateY(0); box-shadow: 0 10px 24px rgba(15,23,42,.06), 0 0 0 0 rgba(125,211,252,.32); }
+      50%{ transform: translateY(-1px); box-shadow: 0 14px 30px rgba(15,23,42,.08), 0 0 0 6px rgba(125,211,252,.20); }
+      100%{ transform: translateY(0); box-shadow: 0 10px 24px rgba(15,23,42,.06), 0 0 0 0 rgba(125,211,252,.32); }
+    }
+    @keyframes setupPulse_fall{
+      0%{ transform: translateY(0); box-shadow: 0 10px 24px rgba(15,23,42,.06), 0 0 0 0 rgba(122,30,58,.28); }
+      50%{ transform: translateY(-1px); box-shadow: 0 14px 30px rgba(15,23,42,.08), 0 0 0 6px rgba(122,30,58,.16); }
+      100%{ transform: translateY(0); box-shadow: 0 10px 24px rgba(15,23,42,.06), 0 0 0 0 rgba(122,30,58,.28); }
+    }
+    @keyframes setupPulse_winter{
+      0%{ transform: translateY(0); box-shadow: 0 10px 24px rgba(15,23,42,.06), 0 0 0 0 rgba(48,16,107,.28); }
+      50%{ transform: translateY(-1px); box-shadow: 0 14px 30px rgba(15,23,42,.08), 0 0 0 6px rgba(48,16,107,.16); }
+      100%{ transform: translateY(0); box-shadow: 0 10px 24px rgba(15,23,42,.06), 0 0 0 0 rgba(48,16,107,.28); }
+    }
+
+    /* pantsPulse(하의 유도) */
+    @keyframes pantsPulse_spring{
+      0%{ transform: translateY(0); box-shadow: 0 10px 24px rgba(15,23,42,.06), 0 0 0 0 rgba(242,201,76,.30); }
+      50%{ transform: translateY(-1px); box-shadow: 0 14px 30px rgba(15,23,42,.08), 0 0 0 6px rgba(242,201,76,.18); }
+      100%{ transform: translateY(0); box-shadow: 0 10px 24px rgba(15,23,42,.06), 0 0 0 0 rgba(242,201,76,.30); }
+    }
+    @keyframes pantsPulse_summer{
+      0%{ transform: translateY(0); box-shadow: 0 10px 24px rgba(15,23,42,.06), 0 0 0 0 rgba(125,211,252,.32); }
+      50%{ transform: translateY(-1px); box-shadow: 0 14px 30px rgba(15,23,42,.08), 0 0 0 6px rgba(125,211,252,.20); }
+      100%{ transform: translateY(0); box-shadow: 0 10px 24px rgba(15,23,42,.06), 0 0 0 0 rgba(125,211,252,.32); }
+    }
+    @keyframes pantsPulse_fall{
+      0%{ transform: translateY(0); box-shadow: 0 10px 24px rgba(15,23,42,.06), 0 0 0 0 rgba(122,30,58,.28); }
+      50%{ transform: translateY(-1px); box-shadow: 0 14px 30px rgba(15,23,42,.08), 0 0 0 6px rgba(122,30,58,.16); }
+      100%{ transform: translateY(0); box-shadow: 0 10px 24px rgba(15,23,42,.06), 0 0 0 0 rgba(122,30,58,.28); }
+    }
+    @keyframes pantsPulse_winter{
+      0%{ transform: translateY(0); box-shadow: 0 10px 24px rgba(15,23,42,.06), 0 0 0 0 rgba(48,16,107,.28); }
+      50%{ transform: translateY(-1px); box-shadow: 0 14px 30px rgba(15,23,42,.08), 0 0 0 6px rgba(48,16,107,.16); }
+      100%{ transform: translateY(0); box-shadow: 0 10px 24px rgba(15,23,42,.06), 0 0 0 0 rgba(48,16,107,.28); }
+    }
+
+    /* 6) 실제로 애니메이션 이름을 계절에 따라 교체(색만 바뀌게) */
+    /* Setup: 계절/기능 유도 */
+    #pageSetup:has(#seasonButtons .btn.selected[data-season="봄"]) #seasonButtons.attention .btn,
+    #pageSetup:has(#seasonButtons .btn.selected[data-season="봄"]) #needButtonsActive.attention .btn{
+      animation-name: setupPulse_spring !important;
+    }
+    #pageSetup:has(#seasonButtons .btn.selected[data-season="여름"]) #seasonButtons.attention .btn,
+    #pageSetup:has(#seasonButtons .btn.selected[data-season="여름"]) #needButtonsActive.attention .btn{
+      animation-name: setupPulse_summer !important;
+    }
+    #pageSetup:has(#seasonButtons .btn.selected[data-season="가을"]) #seasonButtons.attention .btn,
+    #pageSetup:has(#seasonButtons .btn.selected[data-season="가을"]) #needButtonsActive.attention .btn{
+      animation-name: setupPulse_fall !important;
+    }
+    #pageSetup:has(#seasonButtons .btn.selected[data-season="겨울"]) #seasonButtons.attention .btn,
+    #pageSetup:has(#seasonButtons .btn.selected[data-season="겨울"]) #needButtonsActive.attention .btn{
+      animation-name: setupPulse_winter !important;
+    }
+
+    /* Main: 하의 유도 */
+    #pageMain:has(#seasonTabs .tabBtn.selected[data-season-tab="봄"]) .pantsButtons.attention .btn{
+      animation-name: pantsPulse_spring !important;
+    }
+    #pageMain:has(#seasonTabs .tabBtn.selected[data-season-tab="여름"]) .pantsButtons.attention .btn{
+      animation-name: pantsPulse_summer !important;
+    }
+    #pageMain:has(#seasonTabs .tabBtn.selected[data-season-tab="가을"]) .pantsButtons.attention .btn{
+      animation-name: pantsPulse_fall !important;
+    }
+    #pageMain:has(#seasonTabs .tabBtn.selected[data-season-tab="겨울"]) .pantsButtons.attention .btn{
+      animation-name: pantsPulse_winter !important;
+    }
   </style>
 </head>
 
