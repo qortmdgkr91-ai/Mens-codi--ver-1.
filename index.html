@@ -453,9 +453,9 @@
     #seasonButtons.attention .btn:nth-child(4),
     #needButtonsActive.attention .btn:nth-child(4){ animation-delay: .15s; }
     @keyframes setupPulse{
-      0%   { transform: translateY(0); box-shadow: 0 10px 24px rgba(15, 23, 42, .06), 0 0 0 0 rgba(0,0,0,.22); }
-      50%  { transform: translateY(-1px); box-shadow: 0 14px 30px rgba(15, 23, 42, .08), 0 0 0 6px rgba(0,0,0,.12); }
-      100% { transform: translateY(0); box-shadow: 0 10px 24px rgba(15, 23, 42, .06), 0 0 0 0 rgba(0,0,0,.22); }
+      0%   { transform: translateY(0); box-shadow: 0 10px 24px rgba(15, 23, 42, .06), 0 0 0 0 var(--pulseRing0); }
+      50%  { transform: translateY(-1px); box-shadow: 0 14px 30px rgba(15, 23, 42, .08), 0 0 0 6px var(--pulseRing6); }
+      100% { transform: translateY(0); box-shadow: 0 10px 24px rgba(15, 23, 42, .06), 0 0 0 0 var(--pulseRing0); }
     }
     .segButtons{
       display:grid;
@@ -554,9 +554,9 @@
     }
 
     @keyframes pantsPulse{
-      0%   { transform: translateY(0); box-shadow: 0 10px 24px rgba(15, 23, 42, .06), 0 0 0 0 rgba(0,0,0,.22); }
-      50%  { transform: translateY(-1px); box-shadow: 0 14px 30px rgba(15, 23, 42, .08), 0 0 0 6px rgba(0,0,0,.12); }
-      100% { transform: translateY(0); box-shadow: 0 10px 24px rgba(15, 23, 42, .06), 0 0 0 0 rgba(0,0,0,.22); }
+      0%   { transform: translateY(0); box-shadow: 0 10px 24px rgba(15, 23, 42, .06), 0 0 0 0 var(--pulseRing0); }
+      50%  { transform: translateY(-1px); box-shadow: 0 14px 30px rgba(15, 23, 42, .08), 0 0 0 6px var(--pulseRing6); }
+      100% { transform: translateY(0); box-shadow: 0 10px 24px rgba(15, 23, 42, .06), 0 0 0 0 var(--pulseRing0); }
     }
 
     /* ✅ 오른쪽 패널 제목 줄도 강조(선택 전) */
@@ -1090,86 +1090,55 @@
       color: rgba(255,255,255,.96);
       border-color: rgba(0,0,0,.18);
     }
-    /* ===== PATCH: keep original pulse effects, change only colors by season ===== */
+    /* ===== PATCH: keep original pulse effect, change only pulse ring color by season ===== */
 
-    /* 공통(선택 안 했을 때 기본값) */
+    /* 기본값(계절 선택 전 / 기존 보라톤과 동일하게 유지) */
     :root{
-      --seasonC: rgba(79,70,229,.65);
-      --seasonCweak: rgba(79,70,229,.28);
-      --seasonCbg: rgba(79,70,229,.12);
+      --pulseRing0: rgba(79,70,229,.22);
+      --pulseRing6: rgba(79,70,229,.12);
     }
 
-    /* Setup: seasonButtons 기준 */
+    /* 1페이지(Setup): #seasonButtons 선택 기준 */
     #pageSetup:has(#seasonButtons .btn.selected[data-season="봄"]){
-      --seasonC: #F2C94C;
-      --seasonCweak: rgba(242,201,76,.28);
-      --seasonCbg: rgba(242,201,76,.12);
+      --pulseRing0: rgba(242,201,76,.28);
+      --pulseRing6: rgba(242,201,76,.14);
     }
     #pageSetup:has(#seasonButtons .btn.selected[data-season="여름"]){
-      --seasonC: #7DD3FC;
-      --seasonCweak: rgba(125,211,252,.30);
-      --seasonCbg: rgba(125,211,252,.14);
+      --pulseRing0: rgba(125,211,252,.32);
+      --pulseRing6: rgba(125,211,252,.18);
     }
     #pageSetup:has(#seasonButtons .btn.selected[data-season="가을"]){
-      --seasonC: #7A1E3A;
-      --seasonCweak: rgba(122,30,58,.28);
-      --seasonCbg: rgba(122,30,58,.12);
+      --pulseRing0: rgba(122,30,58,.28);
+      --pulseRing6: rgba(122,30,58,.14);
     }
     #pageSetup:has(#seasonButtons .btn.selected[data-season="겨울"]){
-      --seasonC: #30106B;
-      --seasonCweak: rgba(48,16,107,.28);
-      --seasonCbg: rgba(48,16,107,.12);
+      --pulseRing0: rgba(48,16,107,.30);
+      --pulseRing6: rgba(48,16,107,.16);
     }
 
-    /* Main: seasonTabs 기준 */
+    /* 2페이지(Main): #seasonTabs 선택 기준 */
     #pageMain:has(#seasonTabs .tabBtn.selected[data-season-tab="봄"]){
-      --seasonC: #F2C94C;
-      --seasonCweak: rgba(242,201,76,.28);
-      --seasonCbg: rgba(242,201,76,.12);
+      --pulseRing0: rgba(242,201,76,.28);
+      --pulseRing6: rgba(242,201,76,.14);
     }
     #pageMain:has(#seasonTabs .tabBtn.selected[data-season-tab="여름"]){
-      --seasonC: #7DD3FC;
-      --seasonCweak: rgba(125,211,252,.30);
-      --seasonCbg: rgba(125,211,252,.14);
+      --pulseRing0: rgba(125,211,252,.32);
+      --pulseRing6: rgba(125,211,252,.18);
     }
     #pageMain:has(#seasonTabs .tabBtn.selected[data-season-tab="가을"]){
-      --seasonC: #7A1E3A;
-      --seasonCweak: rgba(122,30,58,.28);
-      --seasonCbg: rgba(122,30,58,.12);
+      --pulseRing0: rgba(122,30,58,.28);
+      --pulseRing6: rgba(122,30,58,.14);
     }
     #pageMain:has(#seasonTabs .tabBtn.selected[data-season-tab="겨울"]){
-      --seasonC: #30106B;
-      --seasonCweak: rgba(48,16,107,.28);
-      --seasonCbg: rgba(48,16,107,.12);
+      --pulseRing0: rgba(48,16,107,.30);
+      --pulseRing6: rgba(48,16,107,.16);
     }
 
-    /* 유도 배너(점/테두리/배경) — 애니메이션 없음, 색만 */
-    .pickBanner,
-    .pantsPickBanner{
-      border-color: color-mix(in srgb, var(--seasonC) 45%, transparent) !important;
-      background: linear-gradient(180deg, var(--seasonCbg), color-mix(in srgb, var(--seasonCbg) 60%, transparent)) !important;
-    }
-    .pickBanner .dot,
-    .pantsPickBanner .dot{
-      background: var(--seasonC) !important;
-      box-shadow: 0 0 0 6px color-mix(in srgb, var(--seasonCweak) 60%, transparent) !important;
-    }
-
-    /* 핵심: 기존 pulse 효과( setupPulse / pantsPulse )는 그대로 두고,
-       그 효과에서 쓰이는 테두리/그림자 색만 계절 변수로 덮어씀 */
+    /* (선택) 테두리도 계절색으로 조금 더 잘 보이게 — 이펙트는 건드리지 않고 색만 */
     #seasonButtons.attention .btn,
     #needButtonsActive.attention .btn,
     .pantsButtons.attention .btn{
-      border-color: color-mix(in srgb, var(--seasonC) 45%, transparent) !important;
-    }
-
-    /* 원래 코드가 box-shadow에 색을 박아놨으니, 여기서 동일 구조로 색만 교체 */
-    #seasonButtons.attention .btn,
-    #needButtonsActive.attention .btn{
-      box-shadow: 0 10px 24px rgba(15, 23, 42, .06), 0 0 0 0 var(--seasonCweak) !important;
-    }
-    .pantsButtons.attention .btn{
-      box-shadow: 0 10px 24px rgba(15, 23, 42, .06), 0 0 0 0 var(--seasonCweak) !important;
+      border-color: color-mix(in srgb, var(--pulseRing0) 65%, rgba(0,0,0,.10)) !important;
     }
   </style>
 </head>
