@@ -881,6 +881,29 @@
       }
       #fxCanvas{ display:none; }
     }
+
+    .legendRow{
+      display:flex;
+      gap: 10px;
+      align-items:flex-start;
+      justify-content:space-between;
+      flex-wrap:wrap;
+    }
+    .legendRow .legendItem{
+      min-width: 120px;
+      flex: 1 1 0;
+    }
+    .legendDivider{
+      height: 1px;
+      background: var(--stroke);
+      width: 100%;
+    }
+    .legendEvalTitle{
+      font-weight: 950;
+      font-size: 12px;
+      color: rgba(15,23,42,.78);
+      letter-spacing: -0.01em;
+    }
   </style>
 </head>
 
@@ -891,7 +914,7 @@
   <div class="shell">
     <header class="hero" aria-label="헤더">
       <div class="heroInner">
-        <div class="overline">남자는 핏과 컬러다.</div>
+        <div class="overline">남자옷은 컬러와 핏이다.</div>
         <h1>오늘 뭐 입지?</h1>
         <div class="subline">Men's fashion color match</div>
       </div>
@@ -1002,45 +1025,40 @@
               </div>
 
               <div class="legend" aria-label="강추/괜찮음/그닥/비추 안내">
-                <div class="legendItem">
-                  <div class="legendTop">
-                    <span class="badgeIcon">
-                      <img class="iconImg" id="legendHeart" alt="하트 아이콘" />
-                      <b>강추</b>
-                    </span>
+                <div class="legendRow" aria-label="평가 기준">
+                  <div class="legendItem">
+                    <div class="legendTop">
+                      <span class="badgeIcon">
+                        <img class="iconImg" id="legendHeart" alt="하트 아이콘" />
+                        <b>강추</b>
+                      </span>
+                    </div>
+                    <div class="legendMsg">이렇게만 입어주세요.</div>
                   </div>
-                  <div class="legendMsg">오늘 각이다</div>
+
+                  <div class="legendItem">
+                    <div class="legendTop">
+                      <span class="badgeIcon">
+                        <img class="iconImg" id="legendCircle" alt="동그라미 아이콘" />
+                        <b>무난함</b>
+                      </span>
+                    </div>
+                    <div class="legendMsg">나쁘지 않아요.</div>
+                  </div>
+
+                  <div class="legendItem">
+                    <div class="legendTop">
+                      <span class="badgeIcon">
+                        <img class="iconImg" id="legendX" alt="엑스 아이콘" />
+                        <b>비추</b>
+                      </span>
+                    </div>
+                    <div class="legendMsg">가급적 피해주세요.</div>
+                  </div>
                 </div>
 
-                <div class="legendItem">
-                  <div class="legendTop">
-                    <span class="badgeIcon">
-                      <img class="iconImg" id="legendCircle" alt="동그라미 아이콘" />
-                      <b>괜찮음</b>
-                    </span>
-                  </div>
-                  <div class="legendMsg">낫 밷</div>
-                </div>
-
-                <div class="legendItem">
-                  <div class="legendTop">
-                    <span class="badgeIcon">
-                      <img class="iconImg" id="legendTriangle" alt="세모 아이콘" />
-                      <b>그닥</b>
-                    </span>
-                  </div>
-                  <div class="legendMsg">상대방 반응 체크하자</div>
-                </div>
-
-                <div class="legendItem">
-                  <div class="legendTop">
-                    <span class="badgeIcon">
-                      <img class="iconImg" id="legendX" alt="엑스 아이콘" />
-                      <b>비추</b>
-                    </span>
-                  </div>
-                  <div class="legendMsg">와 요즘은 콘돔이 이렇게도 나오네</div>
-                </div>
+                <div class="legendDivider" aria-hidden="true"></div>
+                <div class="legendEvalTitle">선택한 조합 평가</div>
 
                 <div class="callout" id="statusCallout">
                   하의 색을 먼저 선택해 주세요. 선택하면 오른쪽에 추천/비추/그닥 색이 나타납니다.
@@ -1226,11 +1244,16 @@
     };
 
     const GRADE = {
-      "강추": { icon: ICON.heart, phrase: "오늘 각이다" },
-      "괜찮음": { icon: ICON.circle, phrase: "낫 밷" },
-      "그닥": { icon: ICON.triangle, phrase: "상대방 반응 체크하자" },
-      "비추": { icon: ICON.x, phrase: "와 요즘은 콘돔이 이렇게도 나오네" }
+      "강추": { icon: ICON.heart, phrase: "이렇게만 입어주세요." },
+      "무난함": { icon: ICON.circle, phrase: "나쁘지 않아요." },
+      "비추": { icon: ICON.x, phrase: "가급적 피해주세요." }
     };
+
+    function mapGradeTo3(grade){
+      if (grade === "강추") return "강추";
+      if (grade === "비추") return "비추";
+      return "무난함";
+    }
 
     const EDU_TEXT = {
       contrast: "하의가 어두우면 상의는 밝게 가는 게 안전합니다.",
@@ -2153,7 +2176,6 @@
           fxCanvas: document.getElementById("fxCanvas"),
           legendHeart: document.getElementById("legendHeart"),
           legendCircle: document.getElementById("legendCircle"),
-          legendTriangle: document.getElementById("legendTriangle"),
           legendX: document.getElementById("legendX"),
           hintText: document.getElementById("hintText"),
           rightMetaText: document.getElementById("rightMetaText"),
@@ -2206,7 +2228,6 @@
       setupIcons(){
         this.el.legendHeart.src = ICON.heart;
         this.el.legendCircle.src = ICON.circle;
-        this.el.legendTriangle.src = ICON.triangle;
         this.el.legendX.src = ICON.x;
       },
 
@@ -2646,27 +2667,23 @@
 
       renderStatusCallout(grade, shirtColorName){
         if (this.state.loadError) return;
-        const iconSrc = (GRADE[grade] && GRADE[grade].icon) ? GRADE[grade].icon : ICON.circle;
-        const phrase = (GRADE[grade] && GRADE[grade].phrase) ? GRADE[grade].phrase : "";
+        const g3 = mapGradeTo3(grade);
+        const iconSrc = GRADE[g3].icon;
+        const phrase = GRADE[g3].phrase;
         const bw = badWeight(this.state.selectedPants, shirtColorName);
         const caseKey = findEduKeyFromCases(this.state.selectedPants, shirtColorName);
         let eduKey;
         if ((grade === "비추" || grade === "그닥") && bw > 0) eduKey = "avoid";
         else if (caseKey) eduKey = caseKey;
         else eduKey = getEduKey(this.state.selectedPants, shirtColorName, grade);
-        const eduLine = EDU_TEXT[eduKey] || EDU_TEXT.contrast;
         const pantsLabel = this.formatWithOption(this.state.selectedPants, this.state.selectedBottomFit);
         const shirtLabel = this.formatWithOption(shirtColorName, this.state.selectedTopType);
-        const styleLine = getStyleLine(this.state.selectedTopType);
-        const styleHtml = styleLine
-          ? `<div style="color: rgba(15,23,42,.70); font-size:12px; line-height:1.4;">스타일: ${styleLine}</div>`
-          : "";
 
         this.el.statusCallout.innerHTML = `
           <div style="display:flex; gap:10px; align-items:flex-start; flex-wrap:wrap;">
             <span class="badgeIcon">
-              <img class="iconImg" src="${iconSrc}" alt="${grade} 아이콘" />
-              <b>${grade}</b>
+              <img class="iconImg" src="${iconSrc}" alt="${g3} 아이콘" />
+              <b>${g3}</b>
             </span>
             <div style="display:grid; gap:4px;">
               <div style="color: rgba(15,23,42,.86); font-size:12px; line-height:1.4;">
@@ -2675,10 +2692,6 @@
               <div style="color: rgba(15,23,42,.70); font-size:12px; line-height:1.45;">
                 ${phrase}
               </div>
-              <div style="color: rgba(15,23,42,.62); font-size:11px; line-height:1.35;">
-                이유: ${eduLine}
-              </div>
-              ${styleHtml}
             </div>
           </div>
         `;
@@ -2761,11 +2774,12 @@
           c.style.color = s.text;
           c.style.borderColor = s.border;
 
-          const iconSrc = (GRADE[it.grade] && GRADE[it.grade].icon) ? GRADE[it.grade].icon : ICON.circle;
+          const g3 = mapGradeTo3(it.grade);
+          const iconSrc = (GRADE[g3] && GRADE[g3].icon) ? GRADE[g3].icon : ICON.circle;
 
           c.innerHTML = `
             <span class="mark" style="background:${s.markBg}">
-              <img src="${iconSrc}" alt="${it.grade} 아이콘"/>
+              <img src="${iconSrc}" alt="${g3} 아이콘"/>
             </span>
             <span>${it.color}</span>
           `;
