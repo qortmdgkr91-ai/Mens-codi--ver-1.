@@ -1018,6 +1018,42 @@
       color: rgba(255,255,255,.96);
       border-color: rgba(0,0,0,.18);
     }
+
+    /* ===== PATCH: needButtonsActive selected color follows season (setup page) ===== */
+
+    /* 기본: need selected의 기존 그라데이션/색을 덮어쓸 준비(계절별 규칙에서 최종색 지정) */
+    #needButtonsActive .btn.selected{
+      box-shadow: none;
+      border: 1px solid rgba(0,0,0,.18);
+    }
+
+    /* 봄 선택 상태이면: need selected = 봄색 */
+    #pageSetup:has(#seasonButtons .btn.selected[data-season="봄"]) #needButtonsActive .btn.selected{
+      background: #F2C94C;
+      color: rgba(0,0,0,.92);
+      border-color: rgba(0,0,0,.18);
+    }
+
+    /* 여름 */
+    #pageSetup:has(#seasonButtons .btn.selected[data-season="여름"]) #needButtonsActive .btn.selected{
+      background: #7DD3FC;
+      color: rgba(0,0,0,.92);
+      border-color: rgba(0,0,0,.18);
+    }
+
+    /* 가을 */
+    #pageSetup:has(#seasonButtons .btn.selected[data-season="가을"]) #needButtonsActive .btn.selected{
+      background: #7A1E3A;
+      color: rgba(255,255,255,.96);
+      border-color: rgba(0,0,0,.18);
+    }
+
+    /* 겨울 */
+    #pageSetup:has(#seasonButtons .btn.selected[data-season="겨울"]) #needButtonsActive .btn.selected{
+      background: #1D4ED8;
+      color: rgba(255,255,255,.96);
+      border-color: rgba(0,0,0,.18);
+    }
   </style>
 </head>
 
