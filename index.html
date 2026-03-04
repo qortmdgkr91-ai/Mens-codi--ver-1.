@@ -1211,6 +1211,7 @@
     <section class="page" id="pageMain" aria-label="두 번째 페이지: 추천 화면">
       <section class="mainTop">
         <div class="statusLine" style="justify-content:flex-start; margin-top:0;">
+          <button class="btn ghost" type="button" id="btnBack">← 뒤로가기</button>
           <div><b>선택 반영</b>: <span id="pillFromSetup">아직</span></div>
         </div>
 
@@ -3286,6 +3287,7 @@
           bannerNeed: document.getElementById("bannerNeed"),
           btnReset: document.getElementById("btnReset"),
           btnGo: document.getElementById("btnGo"),
+          btnBack: document.getElementById("btnBack"),
           pillFromSetup: document.getElementById("pillFromSetup"),
           tooltip: document.getElementById("tooltip"),
           tooltipTitle: document.getElementById("tooltipTitle"),
@@ -3363,6 +3365,16 @@
           this.syncTabs();
           this.onContextChanged();
           this.showToast("추천 화면으로 이동");
+        });
+
+        this.el.btnBack.addEventListener("click", ()=>{
+          this.hideTooltip();
+          this.showPage("setup");
+          this.syncGuidance(false);
+          this.refreshPills();
+          this.refreshCTA();
+          window.scrollTo({ top: 0, behavior: "smooth" });
+          this.showToast("이전으로 이동");
         });
 
         this.el.btnReset.addEventListener("click", ()=>{
