@@ -1054,6 +1054,42 @@
       color: rgba(255,255,255,.96);
       border-color: rgba(0,0,0,.18);
     }
+
+    /* ===== PATCH: pageMain needTabs selected color follows seasonTabs ===== */
+
+    /* selected 기본(계절 규칙에서 최종색 덮어씀) */
+    #needTabs .tabBtn.selected{
+      box-shadow: none;
+      border: 1px solid rgba(0,0,0,.18);
+    }
+
+    /* 봄 */
+    #pageMain:has(#seasonTabs .tabBtn.selected[data-season-tab="봄"]) #needTabs .tabBtn.selected:not([disabled]){
+      background: #F2C94C;
+      color: rgba(0,0,0,.92);
+      border-color: rgba(0,0,0,.18);
+    }
+
+    /* 여름 */
+    #pageMain:has(#seasonTabs .tabBtn.selected[data-season-tab="여름"]) #needTabs .tabBtn.selected:not([disabled]){
+      background: #7DD3FC;
+      color: rgba(0,0,0,.92);
+      border-color: rgba(0,0,0,.18);
+    }
+
+    /* 가을 */
+    #pageMain:has(#seasonTabs .tabBtn.selected[data-season-tab="가을"]) #needTabs .tabBtn.selected:not([disabled]){
+      background: #7A1E3A;
+      color: rgba(255,255,255,.96);
+      border-color: rgba(0,0,0,.18);
+    }
+
+    /* 겨울 */
+    #pageMain:has(#seasonTabs .tabBtn.selected[data-season-tab="겨울"]) #needTabs .tabBtn.selected:not([disabled]){
+      background: #1D4ED8;
+      color: rgba(255,255,255,.96);
+      border-color: rgba(0,0,0,.18);
+    }
   </style>
 </head>
 
@@ -1104,7 +1140,6 @@
       <section class="section" id="secNeed" aria-label="기능 선택">
         <div class="sectionHead">
           <b>2. 무엇이 필요한가요?</b>
-          <span>버튼 hover 시 상세 설명</span>
         </div>
         <div class="btnGrid2" id="needButtonsAll">
           <div class="btnGrid2 attention" id="needButtonsActive">
