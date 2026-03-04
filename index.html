@@ -1014,7 +1014,7 @@
     /* 겨울 */
     #seasonButtons .btn.selected[data-season="겨울"],
     #seasonTabs .tabBtn.selected[data-season-tab="겨울"]{
-      background: #1D4ED8;           /* 로열블루 */
+      background: #30106B;           /* 딥퍼플 */
       color: rgba(255,255,255,.96);
       border-color: rgba(0,0,0,.18);
     }
@@ -1050,7 +1050,7 @@
 
     /* 겨울 */
     #pageSetup:has(#seasonButtons .btn.selected[data-season="겨울"]) #needButtonsActive .btn.selected{
-      background: #1D4ED8;
+      background: #30106B;
       color: rgba(255,255,255,.96);
       border-color: rgba(0,0,0,.18);
     }
@@ -1086,7 +1086,7 @@
 
     /* 겨울 */
     #pageMain:has(#seasonTabs .tabBtn.selected[data-season-tab="겨울"]) #needTabs .tabBtn.selected:not([disabled]){
-      background: #1D4ED8;
+      background: #30106B;
       color: rgba(255,255,255,.96);
       border-color: rgba(0,0,0,.18);
     }
@@ -1201,7 +1201,6 @@
                 1) 오른쪽에서 <b>하의 색</b>을 먼저 선택하세요.<br/>
                 2) 추천/비추/그닥 색을 <b>클릭</b>하면 상의가 채워지고 멘트가 바뀝니다.
               </div>
-              <button class="btn primary" id="btnBoom" type="button">생성하기 🎉</button>
             </div>
 
             <div class="outfitGrid">
@@ -2382,26 +2381,28 @@
           if (firstBtn) firstBtn.focus({ preventScroll:true });
         });
 
-        this.el.btnBoom.addEventListener("click", ()=>{
-          if(this.mode === "topToPants"){
-            if(!this.state.selectedShirt){
-              this.showToast(STRINGS.toast.needTopForBoom);
-              this.el.statusCallout.textContent = STRINGS.callout.needTopShort;
-              this.setNeedsFirstPick(true);
-              return;
+        if (this.el.btnBoom){
+          this.el.btnBoom.addEventListener("click", ()=>{
+            if(this.mode === "topToPants"){
+              if(!this.state.selectedShirt){
+                this.showToast(STRINGS.toast.needTopForBoom);
+                this.el.statusCallout.textContent = STRINGS.callout.needTopShort;
+                this.setNeedsFirstPick(true);
+                return;
+              }
+            }else{
+              if(!this.state.selectedPants){
+                this.showToast(STRINGS.toast.needPantsForBoom);
+                this.el.statusCallout.textContent = STRINGS.callout.needPantsShort;
+                this.setNeedsFirstPick(true);
+                return;
+              }
             }
-          }else{
-            if(!this.state.selectedPants){
-              this.showToast(STRINGS.toast.needPantsForBoom);
-              this.el.statusCallout.textContent = STRINGS.callout.needPantsShort;
-              this.setNeedsFirstPick(true);
-              return;
-            }
-          }
-          this.fireworks();
-          this.playPop();
-          this.showToast(STRINGS.toast.fireworks);
-        });
+            this.fireworks();
+            this.playPop();
+            this.showToast(STRINGS.toast.fireworks);
+          });
+        }
 
         if (this.el.fxCanvas){
           this.fxCtx = this.el.fxCanvas.getContext("2d");
