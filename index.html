@@ -2542,6 +2542,18 @@
       setMode(need){
         this.mode = (need === "topToPants") ? "topToPants" : "pantsToTop";
         this.state.mode = this.mode;
+        if (this.el.hintText) this.el.hintText.innerHTML = (this.mode === "topToPants") ? STRINGS.hint.topToPants : STRINGS.hint.pantsToTop;
+        if (this.el.rightMetaText) this.el.rightMetaText.textContent = (this.mode === "topToPants") ? STRINGS.rightMeta.topToPants : STRINGS.rightMeta.pantsToTop;
+
+        this.state.selectedPants = null;
+        this.state.selectedShirt = null;
+        this.state.selectedTopColor = null;
+        this.state.selectedGrade = null;
+        this.el.statePill.textContent = "하의 선택: 아직";
+        this.el.shirtPill.textContent = "상의 선택: 아직";
+        this.el.pantsButtons.querySelectorAll("button").forEach(btn=> btn.classList.remove("selected"));
+        this.el.topColorButtons.querySelectorAll("button").forEach(btn=> btn.classList.remove("selected"));
+
         this.setStep(1);
 
         if (this.mode === "pantsToTop"){
